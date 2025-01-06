@@ -4,7 +4,7 @@ type Type int
 
 const (
 	noType Type = iota
-	i32    Type = iota
+	i64    Type = iota
 )
 
 type Op int
