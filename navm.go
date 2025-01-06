@@ -41,7 +41,7 @@ type Instruction struct {
 }
 
 type IR struct {
-	registersLength int //maximum register number + 1
+	registersLength int // maximum register number + 1
 	instructions    []Instruction
 	constants       []int
 }
