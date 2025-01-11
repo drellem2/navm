@@ -16,6 +16,7 @@ type Op int
 const (
 	noOp Op = iota
 	add  Op = iota
+	mov  Op = iota
 )
 
 // Add concept of virtual vs physical registers
