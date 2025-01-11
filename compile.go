@@ -7,9 +7,8 @@ import (
 )
 
 // TODO: In priority order
-// 1. Make cli demo for interpreter & compiler that evaluates postfix expressions (lib functions)
-// 2. Implement register spilling
-// 3. Get cross-compilation working w/ zig
+// 1. Implement register spilling
+// 2. Get cross-compilation working w/ zig
 
 var aarchMac64Registers = []string{"X9", "X10", "X11", "X12", "X13", "X14", "X15"}
 var aarchMacReturnRegister = "X0"
