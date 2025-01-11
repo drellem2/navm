@@ -6,8 +6,9 @@ import (
 
 // Liveness interval, half open [start, end)
 type Interval struct {
-	start int
-	end   int
+	register Register
+	start    int
+	end      int
 }
 
 // Two modes for different uses in the register allocation linear scan
@@ -70,15 +71,15 @@ func (q *LivenessQueue) Peek() Interval {
 	return q.intervals[0]
 }
 
+func (q *Interval) Print() string {
+	return "(" + strconv.Itoa(q.start) + ", " + strconv.Itoa(q.end) + ")"
+}
+
 func (q *LivenessQueue) Print() string {
 	// Return string instead of printing
 	str := "["
 	for _, i := range q.intervals {
-		str += "("
-		str += strconv.Itoa(i.start)
-		str += ", "
-		str += strconv.Itoa(i.end)
-		str += ")"
+		str += i.Print()
 	}
 	return str + "]"
 }
