@@ -36,7 +36,7 @@ func compile(ir *IR) string {
 	for _, instr := range ir.instructions {
 		switch instr.op {
 		case add:
-			result += getInstruction("add", instr)
+			result += getInstruction("add", instr, ir)
 			lastRegister = instr.ret.value
 		default:
 			panic("Unknown operation: " + strconv.Itoa(int(instr.op)))
@@ -59,17 +59,17 @@ func getFooter(lastRegister int) string {
 	return str
 }
 
-func getInstruction(name string, instr Instruction) string {
+func getInstruction(name string, instr Instruction, ir *IR) string {
 	retRegister := getPhysicalRegister(instr.ret.value)
 	arg1 := getPhysicalRegister(instr.arg1.value)
-	arg2 := getArg(instr.arg2)
+	arg2 := getArg(instr.arg2, ir)
 	return "  " + name + " " + retRegister + ", " + arg1 + ", " + arg2 + "\n"
 }
 
-func getArg(arg Arg) string {
+func getArg(arg Arg, ir *IR) string {
 	switch arg.argType {
 	case constant:
-		return getConstant(arg.value)
+		return getConstant(arg.value, ir)
 	case physicalRegisterArg:
 		return getPhysicalRegister(arg.value)
 	case virtualRegisterArg:
@@ -79,8 +79,8 @@ func getArg(arg Arg) string {
 	}
 }
 
-func getConstant(i int) string {
-	return "#" + strconv.Itoa(i)
+func getConstant(i int, ir *IR) string {
+	return "#" + strconv.Itoa(ir.constants[i])
 }
 
 func getPhysicalRegister(i int) string {
