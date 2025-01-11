@@ -65,6 +65,10 @@ type IR struct {
 	constants       []int
 }
 
+func makeVirtualRegister(value int) Register {
+	return Register{registerType: virtualRegister, value: value}
+}
+
 func (i *Instruction) Print() string {
 	return strconv.Itoa(int(i.op)) + " " + strconv.Itoa(i.ret.value) + " " + strconv.Itoa(i.arg1.value) + " " + strconv.Itoa(i.arg2.value)
 }

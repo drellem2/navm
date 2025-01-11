@@ -72,7 +72,3 @@ func runAdd(i Instruction, r *Runtime, ir *IR) {
 	}
 	r.registers[i.ret.value] = r.registers[i.arg1.value] + arg2
 }
-
-func makeVirtualRegister(value int) Register {
-	return Register{registerType: virtualRegister, value: value}
-}
