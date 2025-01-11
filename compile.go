@@ -1,5 +1,9 @@
 package navm
 
+import (
+	q "github.com/drellem2/navm/internal/queue"
+)
+
 // TODO: build liveness intervals and perform simple linear scan
 // to allocate registers.
 // First step: for 64-bit integers, using X9-X15 registers. Panic if not enough
@@ -8,16 +12,91 @@ package navm
 var aarchMac64Registers = []string{"X9", "X10", "X11", "X12", "X13", "X14", "X15"}
 var aarchMacReturnRegister = "X0"
 
-func compile(ir *IR) {
+func allocateRegisters(ir *IR) {
 	// Build liveness intervals
 	// Perform linear scan register allocation
 
-	// activeQueue := LivenessQueue{active: true}
-	// inactiveQueue := LivenessQueue{active: false}
+	activeQueue := LivenessQueue{active: true}
+	inactiveQueue := LivenessQueue{active: false}
+	finishedQueue := LivenessQueue{active: true}
 
-	// // First we will make intervals for all virtual registers
-	// intervals := makeIntervals(ir)
+	// maps vregisters to physical registers
+	allocated := make([]int, ir.registersLength)
 
+	// Free physical registers are just a simple queue, not a priority queue
+	physicalRegisters := q.Queue{}
+	for i := 0; i < len(aarchMac64Registers); i++ {
+		physicalRegisters.Push(i + 1)
+	}
+
+	println("Physical registers: ", physicalRegisters.Print())
+
+	// First we will make intervals for all virtual registers
+	intervals := makeIntervals(ir)
+
+	// Push all intervals to inactive queue
+	for _, val := range intervals[1:] {
+		inactiveQueue.Push(val)
+	}
+
+	// Linear scan, we iterate through inactive queue and try to assign
+	// registers
+
+	println("Inactive queue: ", inactiveQueue.Print())
+
+	for !inactiveQueue.Empty() {
+		interval := inactiveQueue.Pop()
+		// Check if we can assign a register
+		if physicalRegisters.Empty() {
+			// Spill register
+			panic("Too many virtual registers - spilling not implemented")
+		}
+
+		// Free all registers that are not live anymore
+		for !activeQueue.Empty() && activeQueue.Peek().end <= interval.start {
+			finished := activeQueue.Pop()
+			physicalRegisters.Push(finished.physicalRegister)
+		}
+
+		// assign a register
+		interval.physicalRegister = physicalRegisters.Pop()
+		println("Assigned: ", interval.register.value, " to ", interval.physicalRegister)
+		activeQueue.Push(interval)
+	}
+
+	// Add remaining active intervals to finished queue
+	for !activeQueue.Empty() {
+		finishedQueue.Push(activeQueue.Pop())
+	}
+
+	// Iterate over finished
+	for !finishedQueue.Empty() {
+		finished := finishedQueue.Pop()
+		println("Finished: ", finished.register.value, " to ", finished.physicalRegister)
+		allocated[finished.register.value] = finished.physicalRegister
+	}
+
+	println("Print all allocated values")
+	for k, v := range allocated {
+		println("Allocated: ", k, " to ", v)
+	}
+
+	// Now iterate through instructions and set all virtual registers to physical registers
+	for i, instr := range ir.instructions {
+		if instr.arg1.argType == virtualRegisterArg {
+			instr.arg1.argType = physicalRegisterArg
+			instr.arg1.value = allocated[instr.arg1.value]
+		}
+		if instr.ret.registerType == virtualRegister {
+			instr.ret.registerType = physicalRegister
+			instr.ret.value = allocated[instr.ret.value]
+		}
+		if instr.arg2.argType == virtualRegisterArg {
+			instr.arg2.argType = physicalRegisterArg
+			instr.arg2.value = allocated[instr.arg2.value]
+		}
+		ir.instructions[i] = instr
+	}
 }
 
 func makeIntervals(ir *IR) []Interval {
