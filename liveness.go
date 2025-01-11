@@ -10,23 +10,39 @@ type Interval struct {
 	end   int
 }
 
+// Two modes for different uses in the register allocation linear scan
+// If active, we sort by start time ascending as is currently the case
+// If inactive, we sort by end time descending
+
 // Priority queue with smallest start values first
 type LivenessQueue struct {
 	intervals []Interval
+	active    bool
 }
 
 func (q *LivenessQueue) Push(i Interval) {
-
 	// Insert in sorted order
 	if len(q.intervals) == 0 {
 		q.intervals = append(q.intervals, i)
 		return
 	}
-	for j, v := range q.intervals {
-		if v.start > i.start {
-			q.intervals = append(q.intervals[:j], append([]Interval{i}, q.intervals[j:]...)...)
-			return
+	if q.active {
+		for j, v := range q.intervals {
+			if v.start > i.start {
+				q.intervals = append(q.intervals[:j], append([]Interval{i}, q.intervals[j:]...)...)
+				return
+			}
 		}
+		q.intervals = append(q.intervals, i)
+
+	} else {
+		for j, v := range q.intervals {
+			if v.end < i.end {
+				q.intervals = append(q.intervals[:j], append([]Interval{i}, q.intervals[j:]...)...)
+				return
+			}
+		}
+		q.intervals = append(q.intervals, i)
 	}
 }
 
