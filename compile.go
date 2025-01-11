@@ -107,8 +107,6 @@ func allocateRegisters(ir *IR) {
 		physicalRegisters.Push(i + 1)
 	}
 
-	println("Physical registers: ", physicalRegisters.Print())
-
 	// First we will make intervals for all virtual registers
 	intervals := makeIntervals(ir)
 
@@ -119,8 +117,6 @@ func allocateRegisters(ir *IR) {
 
 	// Linear scan, we iterate through inactive queue and try to assign
 	// registers
-
-	println("Inactive queue: ", inactiveQueue.Print())
 
 	for !inactiveQueue.Empty() {
 		interval := inactiveQueue.Pop()
@@ -138,7 +134,6 @@ func allocateRegisters(ir *IR) {
 
 		// assign a register
 		interval.physicalRegister = physicalRegisters.Pop()
-		println("Assigned: ", interval.register.value, " to ", interval.physicalRegister)
 		activeQueue.Push(interval)
 	}
 
@@ -150,13 +145,7 @@ func allocateRegisters(ir *IR) {
 	// Iterate over finished
 	for !finishedQueue.Empty() {
 		finished := finishedQueue.Pop()
-		println("Finished: ", finished.register.value, " to ", finished.physicalRegister)
 		allocated[finished.register.value] = finished.physicalRegister
-	}
-
-	println("Print all allocated values")
-	for k, v := range allocated {
-		println("Allocated: ", k, " to ", v)
 	}
 
 	// Now iterate through instructions and set all virtual registers to physical registers

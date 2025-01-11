@@ -144,7 +144,6 @@ func TestCompile(t *testing.T) {
 	}
 
 	result := compile(&ir)
-	println(result)
 	if result == "" {
 		t.Errorf("Expected non-empty string, got %s", result)
 	}
