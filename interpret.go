@@ -28,6 +28,12 @@ func Interpret(ir *IR) int {
 		case sub:
 			lastAssignedRegister = i.ret.value
 			runSub(i, &r, ir)
+		case mult:
+			lastAssignedRegister = i.ret.value
+			runMult(i, &r, ir)
+		case div:
+			lastAssignedRegister = i.ret.value
+			runDiv(i, &r, ir)
 		case mov:
 			lastAssignedRegister = i.ret.value
 			runMov(i, &r, ir)
@@ -99,4 +105,42 @@ func runSub(i Instruction, r *Runtime, ir *IR) {
 		panic("Unknown argument type")
 	}
 	r.registers[i.ret.value] = r.registers[i.arg1.value] - arg2
+}
+
+func runMult(i Instruction, r *Runtime, ir *IR) {
+	arg2 := 0
+	validateRegister(i.ret)
+	validateRegister(i.arg1)
+	switch i.arg2.argType {
+	case noArgType:
+		panic("No argument type for add op")
+	case constant:
+		arg2 = ir.constants[i.arg2.value]
+	case virtualRegisterArg:
+		arg2 = r.registers[i.arg2.value]
+	case physicalRegisterArg:
+		panic("Physical register not legal when interpreting")
+	default:
+		panic("Unknown argument type")
+	}
+	r.registers[i.ret.value] = r.registers[i.arg1.value] * arg2
+}
+
+func runDiv(i Instruction, r *Runtime, ir *IR) {
+	arg2 := 0
+	validateRegister(i.ret)
+	validateRegister(i.arg1)
+	switch i.arg2.argType {
+	case noArgType:
+		panic("No argument type for add op")
+	case constant:
+		arg2 = ir.constants[i.arg2.value]
+	case virtualRegisterArg:
+		arg2 = r.registers[i.arg2.value]
+	case physicalRegisterArg:
+		panic("Physical register not legal when interpreting")
+	default:
+		panic("Unknown argument type")
+	}
+	r.registers[i.ret.value] = r.registers[i.arg1.value] / arg2
 }

@@ -127,3 +127,63 @@ func TestSubRegisters(t *testing.T) {
 		t.Errorf("Expected 1, got %d", result)
 	}
 }
+
+func TestMultRegisters(t *testing.T) {
+	ir := IR{
+		registersLength: 3,
+		instructions: []Instruction{
+			Instruction{
+				op:  mov,
+				ret: makeVirtualRegister(2),
+				arg2: Arg{
+					argType: constant,
+					value:   1,
+				},
+			},
+			Instruction{
+				op:   mult,
+				ret:  makeVirtualRegister(1),
+				arg1: makeVirtualRegister(2),
+				arg2: Arg{
+					argType: constant,
+					value:   0,
+				},
+			},
+		},
+		constants: []int{3, 2},
+	}
+	result := Interpret(&ir)
+	if result != 6 {
+		t.Errorf("Expected 6, got %d", result)
+	}
+}
+
+func TestDivRegisters(t *testing.T) {
+	ir := IR{
+		registersLength: 3,
+		instructions: []Instruction{
+			Instruction{
+				op:  mov,
+				ret: makeVirtualRegister(2),
+				arg2: Arg{
+					argType: constant,
+					value:   1,
+				},
+			},
+			Instruction{
+				op:   div,
+				ret:  makeVirtualRegister(1),
+				arg1: makeVirtualRegister(2),
+				arg2: Arg{
+					argType: constant,
+					value:   0,
+				},
+			},
+		},
+		constants: []int{2, 4},
+	}
+	result := Interpret(&ir)
+	if result != 2 {
+		t.Errorf("Expected 2, got %d", result)
+	}
+}
