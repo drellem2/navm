@@ -6,10 +6,9 @@ import (
 	q "github.com/drellem2/navm/internal/queue"
 )
 
-// TODO: build liveness intervals and perform simple linear scan
-// to allocate registers.
-// First step: for 64-bit integers, using X9-X15 registers. Panic if not enough
-// Second: implement register spilling
+// TODO: In priority order
+// 1. Add move instructions
+// 3. Implement register spilling
 
 var aarchMac64Registers = []string{"X9", "X10", "X11", "X12", "X13", "X14", "X15"}
 var aarchMacReturnRegister = "X0"
@@ -61,7 +60,7 @@ func getFooter(lastRegister int) string {
 
 func getInstruction(name string, instr Instruction) string {
 	retRegister := getPhysicalRegister(instr.ret.value)
-	arg1 := getArg(instr.arg1)
+	arg1 := getPhysicalRegister(instr.arg1.value)
 	arg2 := getArg(instr.arg2)
 	return "  " + name + " " + retRegister + ", " + arg1 + ", " + arg2 + "\n"
 }
@@ -161,8 +160,8 @@ func allocateRegisters(ir *IR) {
 
 	// Now iterate through instructions and set all virtual registers to physical registers
 	for i, instr := range ir.instructions {
-		if instr.arg1.argType == virtualRegisterArg {
-			instr.arg1.argType = physicalRegisterArg
+		if instr.arg1.registerType == virtualRegister {
+			instr.arg1.registerType = physicalRegister
 			instr.arg1.value = allocated[instr.arg1.value]
 		}
 		if instr.ret.registerType == virtualRegister {
@@ -190,7 +189,7 @@ func makeIntervals(ir *IR) []Interval {
 	for i, instr := range ir.instructions {
 		// Get all virtual registers used in this instruction
 		// and update their intervals
-		if instr.arg1.argType == virtualRegisterArg {
+		if instr.arg1.registerType == virtualRegister {
 			intervals[instr.arg1.value].start = min(intervals[instr.arg1.value].start, i)
 			intervals[instr.arg1.value].end = i + 1
 		}

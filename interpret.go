@@ -7,20 +7,28 @@ type Runtime struct {
 func Interpret(ir *IR) int {
 	r := Runtime{registers: make([]int, ir.registersLength)}
 	for _, i := range ir.instructions {
-		var arg1, arg2 = 0, 0
+		arg2 := 0
 		switch i.op {
 		case add:
-			switch i.arg1.argType {
-			case noArgType:
-				panic("No argument type for add op")
-			case constant:
-				arg1 = ir.constants[i.arg1.value]
-			case virtualRegisterArg:
-				arg1 = r.registers[i.arg1.value]
-			case physicalRegisterArg:
+			switch i.ret.registerType {
+			case noRegisterType:
+				panic("No register type for add op")
+			case virtualRegister:
+				// do nothing
+			case physicalRegister:
 				panic("Physical register not legal when interpreting")
 			default:
-				panic("Unknown argument type")
+				panic("Unknown register type")
+			}
+			switch i.arg1.registerType {
+			case noRegisterType:
+				panic("No register type for add op")
+			case virtualRegister:
+				// do nothing
+			case physicalRegister:
+				panic("Physical register not legal when interpreting")
+			default:
+				panic("Unknown register type")
 			}
 			switch i.arg2.argType {
 			case noArgType:
@@ -34,7 +42,7 @@ func Interpret(ir *IR) int {
 			default:
 				panic("Unknown argument type")
 			}
-			r.registers[i.ret.value] = arg1 + arg2
+			r.registers[i.ret.value] = r.registers[i.arg1.value] + arg2
 		default:
 			panic("Unknown operation")
 		}

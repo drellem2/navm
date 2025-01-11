@@ -9,29 +9,25 @@ func init() {
 
 // TODO: use property based testing
 
+// we don't have move instructions yet, so these programs are assuming 0-initialization of registers
+
 func TestMakeIntervals(t *testing.T) {
 	ir := IR{
 		registersLength: 3,
 		instructions: []Instruction{
 			Instruction{
-				op:  add,
-				ret: makeVirtualRegister(2),
-				arg1: Arg{
-					argType: constant,
-					value:   0,
-				},
+				op:   add,
+				ret:  makeVirtualRegister(2),
+				arg1: makeVirtualRegister(2),
 				arg2: Arg{
 					argType: constant,
 					value:   1,
 				},
 			},
 			Instruction{
-				op:  add,
-				ret: makeVirtualRegister(1),
-				arg1: Arg{
-					argType: virtualRegisterArg,
-					value:   2,
-				},
+				op:   add,
+				ret:  makeVirtualRegister(1),
+				arg1: makeVirtualRegister(2),
 				arg2: Arg{
 					argType: constant,
 					value:   1,
@@ -65,24 +61,18 @@ func TestAllocateRegisters(t *testing.T) {
 		registersLength: 3,
 		instructions: []Instruction{
 			Instruction{
-				op:  add,
-				ret: makeVirtualRegister(2),
-				arg1: Arg{
-					argType: constant,
-					value:   0,
-				},
+				op:   add,
+				ret:  makeVirtualRegister(2),
+				arg1: makeVirtualRegister(2),
 				arg2: Arg{
 					argType: constant,
 					value:   1,
 				},
 			},
 			Instruction{
-				op:  add,
-				ret: makeVirtualRegister(1),
-				arg1: Arg{
-					argType: virtualRegisterArg,
-					value:   2,
-				},
+				op:   add,
+				ret:  makeVirtualRegister(1),
+				arg1: makeVirtualRegister(2),
 				arg2: Arg{
 					argType: constant,
 					value:   1,
@@ -99,7 +89,7 @@ func TestAllocateRegisters(t *testing.T) {
 
 	// Check all of the registers are physical & none are 0
 	for _, i := range ir.instructions {
-		if i.arg1.argType == virtualRegisterArg {
+		if i.arg1.registerType == virtualRegister {
 			t.Errorf("Expected physical register, got virtual")
 		}
 		if i.ret.registerType == virtualRegister {
@@ -111,7 +101,7 @@ func TestAllocateRegisters(t *testing.T) {
 	}
 
 	for _, i := range ir.instructions {
-		if i.arg1.argType == physicalRegisterArg && i.arg1.value == 0 {
+		if i.arg1.registerType == physicalRegister && i.arg1.value == 0 {
 			t.Errorf("Expected non-zero register")
 		}
 		if i.ret.registerType == physicalRegister && i.ret.value == 0 {
@@ -131,24 +121,18 @@ func TestCompile(t *testing.T) {
 		registersLength: 3,
 		instructions: []Instruction{
 			Instruction{
-				op:  add,
-				ret: makeVirtualRegister(2),
-				arg1: Arg{
-					argType: constant,
-					value:   0,
-				},
+				op:   add,
+				ret:  makeVirtualRegister(2),
+				arg1: makeVirtualRegister(2),
 				arg2: Arg{
 					argType: constant,
 					value:   1,
 				},
 			},
 			Instruction{
-				op:  add,
-				ret: makeVirtualRegister(1),
-				arg1: Arg{
-					argType: virtualRegisterArg,
-					value:   2,
-				},
+				op:   add,
+				ret:  makeVirtualRegister(1),
+				arg1: makeVirtualRegister(2),
 				arg2: Arg{
 					argType: constant,
 					value:   1,
@@ -163,5 +147,4 @@ func TestCompile(t *testing.T) {
 	if result != "" {
 		t.Errorf("Expected empty string, got %s", result)
 	}
-
 }

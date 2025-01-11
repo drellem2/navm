@@ -54,7 +54,7 @@ type Arg struct {
 type Instruction struct {
 	op   Op
 	ret  Register
-	arg1 Arg
+	arg1 Register
 	arg2 Arg
 }
 
