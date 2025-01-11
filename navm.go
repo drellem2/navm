@@ -17,6 +17,7 @@ const (
 	noOp Op = iota
 	add  Op = iota
 	mov  Op = iota
+	sub  Op = iota
 )
 
 // Add concept of virtual vs physical registers

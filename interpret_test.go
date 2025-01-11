@@ -97,3 +97,33 @@ func TestMove(t *testing.T) {
 		t.Errorf("Expected 3, got %d", result)
 	}
 }
+
+func TestSubRegisters(t *testing.T) {
+	ir := IR{
+		registersLength: 3,
+		instructions: []Instruction{
+			Instruction{
+				op:  mov,
+				ret: makeVirtualRegister(2),
+				arg2: Arg{
+					argType: constant,
+					value:   1,
+				},
+			},
+			Instruction{
+				op:   sub,
+				ret:  makeVirtualRegister(1),
+				arg1: makeVirtualRegister(2),
+				arg2: Arg{
+					argType: constant,
+					value:   0,
+				},
+			},
+		},
+		constants: []int{1, 2},
+	}
+	result := Interpret(&ir)
+	if result != 1 {
+		t.Errorf("Expected 1, got %d", result)
+	}
+}
