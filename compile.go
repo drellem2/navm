@@ -39,6 +39,9 @@ func compile(ir *IR) string {
 		case add:
 			result += getInstruction("add", instr, ir)
 			lastRegister = instr.ret.value
+		case sub:
+			result += getInstruction("sub", instr, ir)
+			lastRegister = instr.ret.value
 		case mov:
 			result += getTwoArgInstruction("mov", instr, ir)
 			lastRegister = instr.ret.value

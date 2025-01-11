@@ -187,3 +187,33 @@ func TestMov(t *testing.T) {
 		t.Errorf("Expected non-empty string, got %s", result)
 	}
 }
+
+func TestSub(t *testing.T) {
+	ir := IR{
+		registersLength: 3,
+		instructions: []Instruction{
+			Instruction{
+				op:  mov,
+				ret: makeVirtualRegister(2),
+				arg2: Arg{
+					argType: constant,
+					value:   1,
+				},
+			},
+			Instruction{
+				op:   sub,
+				ret:  makeVirtualRegister(1),
+				arg1: makeVirtualRegister(2),
+				arg2: Arg{
+					argType: constant,
+					value:   0,
+				},
+			},
+		},
+		constants: []int{1, 2},
+	}
+	result := compile(&ir)
+	if result != "" {
+		t.Errorf("Expected non-empty string, got %s", result)
+	}
+}
