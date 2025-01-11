@@ -15,8 +15,10 @@ func Interpret(ir *IR) int {
 				panic("No argument type for add op")
 			case constant:
 				arg1 = ir.constants[i.arg1.value]
-			case register:
+			case virtualRegisterArg:
 				arg1 = r.registers[i.arg1.value]
+			case physicalRegisterArg:
+				panic("Physical register not legal when interpreting")
 			default:
 				panic("Unknown argument type")
 			}
@@ -25,15 +27,21 @@ func Interpret(ir *IR) int {
 				panic("No argument type for add op")
 			case constant:
 				arg2 = ir.constants[i.arg2.value]
-			case register:
+			case virtualRegisterArg:
 				arg2 = r.registers[i.arg2.value]
+			case physicalRegisterArg:
+				panic("Physical register not legal when interpreting")
 			default:
 				panic("Unknown argument type")
 			}
-			r.registers[i.ret] = arg1 + arg2
+			r.registers[i.ret.value] = arg1 + arg2
 		default:
 			panic("Unknown operation")
 		}
 	}
 	return r.registers[1]
+}
+
+func makeVirtualRegister(value int) Register {
+	return Register{registerType: virtualRegister, value: value}
 }

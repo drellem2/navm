@@ -13,7 +13,7 @@ func TestAddConstants(t *testing.T) {
 		instructions: []Instruction{
 			Instruction{
 				op:  add,
-				ret: 1,
+				ret: makeVirtualRegister(1),
 				arg1: Arg{
 					argType: constant,
 					value:   0,
@@ -38,7 +38,7 @@ func TestAddRegisters(t *testing.T) {
 		instructions: []Instruction{
 			Instruction{
 				op:  add,
-				ret: 2,
+				ret: makeVirtualRegister(2),
 				arg1: Arg{
 					argType: constant,
 					value:   0,
@@ -50,9 +50,9 @@ func TestAddRegisters(t *testing.T) {
 			},
 			Instruction{
 				op:  add,
-				ret: 1,
+				ret: makeVirtualRegister(1),
 				arg1: Arg{
-					argType: register,
+					argType: virtualRegisterArg,
 					value:   2,
 				},
 				arg2: Arg{

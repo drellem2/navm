@@ -14,7 +14,20 @@ const (
 	add  Op = iota
 )
 
-type Register int
+// Add concept of virtual vs physical registers
+
+type RegisterType int
+
+const (
+	noRegisterType   RegisterType = iota
+	virtualRegister  RegisterType = iota
+	physicalRegister RegisterType = iota
+)
+
+type Register struct {
+	registerType RegisterType
+	value        int
+}
 
 // 0 register is not used, will indicate "no register"
 // 1 register will indicate the return value
@@ -22,9 +35,10 @@ type Register int
 type ArgType int
 
 const (
-	noArgType ArgType = iota
-	register  ArgType = iota
-	constant  ArgType = iota
+	noArgType           ArgType = iota
+	virtualRegisterArg  ArgType = iota
+	physicalRegisterArg ArgType = iota
+	constant            ArgType = iota
 )
 
 // Basically a union
