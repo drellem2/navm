@@ -117,7 +117,7 @@ func TestAllocateRegisters(t *testing.T) {
 }
 
 // TODO: actually test output automatically somehow?
-func TestCompile(t *testing.T) {
+func TestAdd(t *testing.T) {
 	ir := IR{
 		registersLength: 3,
 		instructions: []Instruction{
@@ -137,6 +137,45 @@ func TestCompile(t *testing.T) {
 				arg2: Arg{
 					argType: constant,
 					value:   1,
+				},
+			},
+		},
+		constants: []int{1, 2},
+	}
+
+	result := compile(&ir)
+	if result == "" {
+		t.Errorf("Expected non-empty string, got %s", result)
+	}
+}
+
+func TestMov(t *testing.T) {
+	ir := IR{
+		registersLength: 4,
+		instructions: []Instruction{
+			Instruction{
+				op:  mov,
+				ret: makeVirtualRegister(3),
+				arg2: Arg{
+					argType: constant,
+					value:   1,
+				},
+			},
+			Instruction{
+				op:   add,
+				ret:  makeVirtualRegister(2),
+				arg1: makeVirtualRegister(3),
+				arg2: Arg{
+					argType: constant,
+					value:   0,
+				},
+			},
+			Instruction{
+				op:  mov,
+				ret: makeVirtualRegister(1),
+				arg2: Arg{
+					argType: virtualRegisterArg,
+					value:   2,
 				},
 			},
 		},

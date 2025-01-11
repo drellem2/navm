@@ -82,7 +82,8 @@ func (q *LivenessQueue) Peek() Interval {
 }
 
 func (q *Interval) Print() string {
-	return "(" + strconv.Itoa(q.start) + ", " + strconv.Itoa(q.end) + ")"
+	return strconv.Itoa(q.register.value) + "->" + strconv.Itoa(q.physicalRegister) +
+		"(" + strconv.Itoa(q.start) + ", " + strconv.Itoa(q.end) + ")"
 }
 
 func (q *LivenessQueue) Print() string {

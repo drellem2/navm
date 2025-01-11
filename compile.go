@@ -8,6 +8,7 @@ import (
 
 // TODO: In priority order
 // 1. Add move instructions
+// 1.2 make interpreter follow compiler behavior of returning last modified register
 // 2. Add sub/mult/div instructions
 // 3. Make cli demo for interpreter & compiler that evaluates postfix expressions (lib functions)
 // 4. Implement register spilling
@@ -40,6 +41,9 @@ func compile(ir *IR) string {
 		case add:
 			result += getInstruction("add", instr, ir)
 			lastRegister = instr.ret.value
+		case mov:
+			result += getTwoArgInstruction("mov", instr, ir)
+			lastRegister = instr.ret.value
 		default:
 			panic("Unknown operation: " + strconv.Itoa(int(instr.op)))
 		}
@@ -59,6 +63,12 @@ func getFooter(lastRegister int) string {
 	str += "  mov X16, #1\n"
 	str += "  svc 0\n"
 	return str
+}
+
+func getTwoArgInstruction(name string, instr Instruction, ir *IR) string {
+	retRegister := getPhysicalRegister(instr.ret.value)
+	arg2 := getArg(instr.arg2, ir)
+	return "  " + name + " " + retRegister + ", " + arg2 + "\n"
 }
 
 func getInstruction(name string, instr Instruction, ir *IR) string {
@@ -131,6 +141,7 @@ func allocateRegisters(ir *IR) {
 		// Free all registers that are not live anymore
 		for !activeQueue.Empty() && activeQueue.Peek().end <= interval.start {
 			finished := activeQueue.Pop()
+			finishedQueue.Push(finished)
 			physicalRegisters.Push(finished.physicalRegister)
 		}
 
