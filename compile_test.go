@@ -217,3 +217,63 @@ func TestSub(t *testing.T) {
 		t.Errorf("Expected non-empty string, got %s", result)
 	}
 }
+
+func TestMult(t *testing.T) {
+	ir := IR{
+		registersLength: 3,
+		instructions: []Instruction{
+			Instruction{
+				op:  mov,
+				ret: makeVirtualRegister(2),
+				arg2: Arg{
+					argType: constant,
+					value:   1,
+				},
+			},
+			Instruction{
+				op:   mult,
+				ret:  makeVirtualRegister(1),
+				arg1: makeVirtualRegister(2),
+				arg2: Arg{
+					argType: constant,
+					value:   0,
+				},
+			},
+		},
+		constants: []int{3, 2},
+	}
+	result := compile(&ir)
+	if result != "" {
+		t.Errorf("Expected non-empty string, got %s", result)
+	}
+}
+
+func TestDiv(t *testing.T) {
+	ir := IR{
+		registersLength: 3,
+		instructions: []Instruction{
+			Instruction{
+				op:  mov,
+				ret: makeVirtualRegister(2),
+				arg2: Arg{
+					argType: constant,
+					value:   1,
+				},
+			},
+			Instruction{
+				op:   div,
+				ret:  makeVirtualRegister(1),
+				arg1: makeVirtualRegister(2),
+				arg2: Arg{
+					argType: constant,
+					value:   0,
+				},
+			},
+		},
+		constants: []int{2, 4},
+	}
+	result := compile(&ir)
+	if result != "" {
+		t.Errorf("Expected non-empty string, got %s", result)
+	}
+}

@@ -15,16 +15,46 @@ import (
 var aarchMac64Registers = []string{"X9", "X10", "X11", "X12", "X13", "X14", "X15"}
 var aarchMacReturnRegister = "X0"
 
+// Add an initial pass that forces constants that will be multiplied or divided to be in registers
+func placeConstantsInRegisters(ir *IR) {
+	// Find all constants that are used in mult/div instructions
+	// Place them in registers
+	xns := ir.instructions[:0]
+	for _, instr := range ir.instructions {
+		if instr.op == mult || instr.op == div {
+			if instr.arg2.argType == constant {
+				vreg := ir.newVirtualRegister()
+				// move instruction
+				movInstr := Instruction{
+					op:  mov,
+					ret: vreg,
+					arg2: Arg{
+						argType: constant,
+						value:   instr.arg2.value,
+					},
+				}
+				xns = append(xns, movInstr)
+				instr.arg2 = Arg{
+					argType: virtualRegisterArg,
+					value:   vreg.value,
+				}
+				xns = append(xns, instr)
+				continue
+			}
+		}
+		xns = append(xns, instr)
+	}
+	ir.instructions = xns
+}
+
 func compile(ir *IR) string {
+	placeConstantsInRegisters(ir)
 	allocateRegisters(ir)
 
 	// Now do really simple code generation
 	// Example:
-	// 	.global _start
+	// .global _start
 	// .align 2
-
-	// // 64-bit, we will use X9-X15 registers
-
 	// _start:
 	//   mov X9, #1
 	//   mov X10, #2
@@ -41,6 +71,12 @@ func compile(ir *IR) string {
 			lastRegister = instr.ret.value
 		case sub:
 			result += getInstruction("sub", instr, ir)
+			lastRegister = instr.ret.value
+		case mult:
+			result += getInstruction("mul", instr, ir)
+			lastRegister = instr.ret.value
+		case div:
+			result += getInstruction("sdiv", instr, ir)
 			lastRegister = instr.ret.value
 		case mov:
 			result += getTwoArgInstruction("mov", instr, ir)
