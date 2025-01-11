@@ -213,7 +213,7 @@ func TestSub(t *testing.T) {
 		constants: []int{1, 2},
 	}
 	result := compile(&ir)
-	if result != "" {
+	if result == "" {
 		t.Errorf("Expected non-empty string, got %s", result)
 	}
 }
