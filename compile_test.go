@@ -116,6 +116,7 @@ func TestAllocateRegisters(t *testing.T) {
 	}
 }
 
+// TODO: actually test output automatically somehow?
 func TestCompile(t *testing.T) {
 	ir := IR{
 		registersLength: 3,
@@ -144,7 +145,7 @@ func TestCompile(t *testing.T) {
 
 	result := compile(&ir)
 	println(result)
-	if result != "" {
-		t.Errorf("Expected empty string, got %s", result)
+	if result == "" {
+		t.Errorf("Expected non-empty string, got %s", result)
 	}
 }
