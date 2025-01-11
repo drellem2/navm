@@ -45,7 +45,7 @@ func Interpret(ir *IR) int {
 	if lastAssignedRegister == 0 {
 		return 0
 	}
-	return r.registers[1]
+	return r.registers[lastAssignedRegister]
 }
 
 func runMov(i Instruction, r *Runtime, ir *IR) {

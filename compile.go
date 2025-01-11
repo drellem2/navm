@@ -15,7 +15,7 @@ var aarchMac64Registers = []string{"X9", "X10", "X11", "X12", "X13", "X14", "X15
 var aarchMacReturnRegister = "X0"
 
 // Add an initial pass that forces constants certain constants into registers
-// e.g. in arm, both mul operands must be in registers 
+// e.g. in arm, both mul operands must be in registers
 func placeConstantsInRegisters(ir *IR) {
 	// Find all constants that are used in mult/div instructions
 	// Place them in registers
@@ -23,7 +23,7 @@ func placeConstantsInRegisters(ir *IR) {
 	for _, instr := range ir.instructions {
 		if instr.op == mult || instr.op == div {
 			if instr.arg2.argType == constant {
-				vreg := ir.newVirtualRegister()
+				vreg := ir.NewVirtualRegister()
 				// move instruction
 				movInstr := Instruction{
 					op:  mov,
@@ -47,7 +47,7 @@ func placeConstantsInRegisters(ir *IR) {
 	ir.instructions = xns
 }
 
-func compile(ir *IR) string {
+func Compile(ir *IR) string {
 	placeConstantsInRegisters(ir)
 	allocateRegisters(ir)
 

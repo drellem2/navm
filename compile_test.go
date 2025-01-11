@@ -17,8 +17,8 @@ func TestMakeIntervals(t *testing.T) {
 		instructions: []Instruction{
 			Instruction{
 				op:   add,
-				ret:  makeVirtualRegister(2),
-				arg1: makeVirtualRegister(2),
+				ret:  MakeVirtualRegister(2),
+				arg1: MakeVirtualRegister(2),
 				arg2: Arg{
 					argType: constant,
 					value:   1,
@@ -26,8 +26,8 @@ func TestMakeIntervals(t *testing.T) {
 			},
 			Instruction{
 				op:   add,
-				ret:  makeVirtualRegister(1),
-				arg1: makeVirtualRegister(2),
+				ret:  MakeVirtualRegister(1),
+				arg1: MakeVirtualRegister(2),
 				arg2: Arg{
 					argType: constant,
 					value:   1,
@@ -62,8 +62,8 @@ func TestAllocateRegisters(t *testing.T) {
 		instructions: []Instruction{
 			Instruction{
 				op:   add,
-				ret:  makeVirtualRegister(2),
-				arg1: makeVirtualRegister(2),
+				ret:  MakeVirtualRegister(2),
+				arg1: MakeVirtualRegister(2),
 				arg2: Arg{
 					argType: constant,
 					value:   1,
@@ -71,8 +71,8 @@ func TestAllocateRegisters(t *testing.T) {
 			},
 			Instruction{
 				op:   add,
-				ret:  makeVirtualRegister(1),
-				arg1: makeVirtualRegister(2),
+				ret:  MakeVirtualRegister(1),
+				arg1: MakeVirtualRegister(2),
 				arg2: Arg{
 					argType: constant,
 					value:   1,
@@ -123,8 +123,8 @@ func TestAdd(t *testing.T) {
 		instructions: []Instruction{
 			Instruction{
 				op:   add,
-				ret:  makeVirtualRegister(2),
-				arg1: makeVirtualRegister(2),
+				ret:  MakeVirtualRegister(2),
+				arg1: MakeVirtualRegister(2),
 				arg2: Arg{
 					argType: constant,
 					value:   1,
@@ -132,8 +132,8 @@ func TestAdd(t *testing.T) {
 			},
 			Instruction{
 				op:   add,
-				ret:  makeVirtualRegister(1),
-				arg1: makeVirtualRegister(2),
+				ret:  MakeVirtualRegister(1),
+				arg1: MakeVirtualRegister(2),
 				arg2: Arg{
 					argType: constant,
 					value:   1,
@@ -143,7 +143,7 @@ func TestAdd(t *testing.T) {
 		constants: []int{1, 2},
 	}
 
-	result := compile(&ir)
+	result := Compile(&ir)
 	if result == "" {
 		t.Errorf("Expected non-empty string, got %s", result)
 	}
@@ -155,7 +155,7 @@ func TestMov(t *testing.T) {
 		instructions: []Instruction{
 			Instruction{
 				op:  mov,
-				ret: makeVirtualRegister(3),
+				ret: MakeVirtualRegister(3),
 				arg2: Arg{
 					argType: constant,
 					value:   1,
@@ -163,8 +163,8 @@ func TestMov(t *testing.T) {
 			},
 			Instruction{
 				op:   add,
-				ret:  makeVirtualRegister(2),
-				arg1: makeVirtualRegister(3),
+				ret:  MakeVirtualRegister(2),
+				arg1: MakeVirtualRegister(3),
 				arg2: Arg{
 					argType: constant,
 					value:   0,
@@ -172,7 +172,7 @@ func TestMov(t *testing.T) {
 			},
 			Instruction{
 				op:  mov,
-				ret: makeVirtualRegister(1),
+				ret: MakeVirtualRegister(1),
 				arg2: Arg{
 					argType: virtualRegisterArg,
 					value:   2,
@@ -182,7 +182,7 @@ func TestMov(t *testing.T) {
 		constants: []int{1, 2},
 	}
 
-	result := compile(&ir)
+	result := Compile(&ir)
 	if result == "" {
 		t.Errorf("Expected non-empty string, got %s", result)
 	}
@@ -194,7 +194,7 @@ func TestSub(t *testing.T) {
 		instructions: []Instruction{
 			Instruction{
 				op:  mov,
-				ret: makeVirtualRegister(2),
+				ret: MakeVirtualRegister(2),
 				arg2: Arg{
 					argType: constant,
 					value:   1,
@@ -202,8 +202,8 @@ func TestSub(t *testing.T) {
 			},
 			Instruction{
 				op:   sub,
-				ret:  makeVirtualRegister(1),
-				arg1: makeVirtualRegister(2),
+				ret:  MakeVirtualRegister(1),
+				arg1: MakeVirtualRegister(2),
 				arg2: Arg{
 					argType: constant,
 					value:   0,
@@ -212,7 +212,7 @@ func TestSub(t *testing.T) {
 		},
 		constants: []int{1, 2},
 	}
-	result := compile(&ir)
+	result := Compile(&ir)
 	if result == "" {
 		t.Errorf("Expected non-empty string, got %s", result)
 	}
@@ -224,7 +224,7 @@ func TestMult(t *testing.T) {
 		instructions: []Instruction{
 			Instruction{
 				op:  mov,
-				ret: makeVirtualRegister(2),
+				ret: MakeVirtualRegister(2),
 				arg2: Arg{
 					argType: constant,
 					value:   1,
@@ -232,8 +232,8 @@ func TestMult(t *testing.T) {
 			},
 			Instruction{
 				op:   mult,
-				ret:  makeVirtualRegister(1),
-				arg1: makeVirtualRegister(2),
+				ret:  MakeVirtualRegister(1),
+				arg1: MakeVirtualRegister(2),
 				arg2: Arg{
 					argType: constant,
 					value:   0,
@@ -242,8 +242,8 @@ func TestMult(t *testing.T) {
 		},
 		constants: []int{3, 2},
 	}
-	result := compile(&ir)
-	if result != "" {
+	result := Compile(&ir)
+	if result == "" {
 		t.Errorf("Expected non-empty string, got %s", result)
 	}
 }
@@ -254,7 +254,7 @@ func TestDiv(t *testing.T) {
 		instructions: []Instruction{
 			Instruction{
 				op:  mov,
-				ret: makeVirtualRegister(2),
+				ret: MakeVirtualRegister(2),
 				arg2: Arg{
 					argType: constant,
 					value:   1,
@@ -262,8 +262,8 @@ func TestDiv(t *testing.T) {
 			},
 			Instruction{
 				op:   div,
-				ret:  makeVirtualRegister(1),
-				arg1: makeVirtualRegister(2),
+				ret:  MakeVirtualRegister(1),
+				arg1: MakeVirtualRegister(2),
 				arg2: Arg{
 					argType: constant,
 					value:   0,
@@ -272,8 +272,8 @@ func TestDiv(t *testing.T) {
 		},
 		constants: []int{2, 4},
 	}
-	result := compile(&ir)
-	if result != "" {
+	result := Compile(&ir)
+	if result == "" {
 		t.Errorf("Expected non-empty string, got %s", result)
 	}
 }

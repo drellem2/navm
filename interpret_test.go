@@ -13,8 +13,8 @@ func TestAddConstants(t *testing.T) {
 		instructions: []Instruction{
 			Instruction{
 				op:   add,
-				ret:  makeVirtualRegister(1),
-				arg1: makeVirtualRegister(1),
+				ret:  MakeVirtualRegister(1),
+				arg1: MakeVirtualRegister(1),
 				arg2: Arg{
 					argType: constant,
 					value:   1,
@@ -35,8 +35,8 @@ func TestAddRegisters(t *testing.T) {
 		instructions: []Instruction{
 			Instruction{
 				op:   add,
-				ret:  makeVirtualRegister(2),
-				arg1: makeVirtualRegister(2),
+				ret:  MakeVirtualRegister(2),
+				arg1: MakeVirtualRegister(2),
 				arg2: Arg{
 					argType: constant,
 					value:   1,
@@ -44,8 +44,8 @@ func TestAddRegisters(t *testing.T) {
 			},
 			Instruction{
 				op:   add,
-				ret:  makeVirtualRegister(1),
-				arg1: makeVirtualRegister(2),
+				ret:  MakeVirtualRegister(1),
+				arg1: MakeVirtualRegister(2),
 				arg2: Arg{
 					argType: constant,
 					value:   1,
@@ -66,7 +66,7 @@ func TestMove(t *testing.T) {
 		instructions: []Instruction{
 			Instruction{
 				op:  mov,
-				ret: makeVirtualRegister(3),
+				ret: MakeVirtualRegister(3),
 				arg2: Arg{
 					argType: constant,
 					value:   1,
@@ -74,8 +74,8 @@ func TestMove(t *testing.T) {
 			},
 			Instruction{
 				op:   add,
-				ret:  makeVirtualRegister(2),
-				arg1: makeVirtualRegister(3),
+				ret:  MakeVirtualRegister(2),
+				arg1: MakeVirtualRegister(3),
 				arg2: Arg{
 					argType: constant,
 					value:   0,
@@ -83,7 +83,7 @@ func TestMove(t *testing.T) {
 			},
 			Instruction{
 				op:  mov,
-				ret: makeVirtualRegister(1),
+				ret: MakeVirtualRegister(1),
 				arg2: Arg{
 					argType: virtualRegisterArg,
 					value:   2,
@@ -104,7 +104,7 @@ func TestSubRegisters(t *testing.T) {
 		instructions: []Instruction{
 			Instruction{
 				op:  mov,
-				ret: makeVirtualRegister(2),
+				ret: MakeVirtualRegister(2),
 				arg2: Arg{
 					argType: constant,
 					value:   1,
@@ -112,8 +112,8 @@ func TestSubRegisters(t *testing.T) {
 			},
 			Instruction{
 				op:   sub,
-				ret:  makeVirtualRegister(1),
-				arg1: makeVirtualRegister(2),
+				ret:  MakeVirtualRegister(1),
+				arg1: MakeVirtualRegister(2),
 				arg2: Arg{
 					argType: constant,
 					value:   0,
@@ -134,7 +134,7 @@ func TestMultRegisters(t *testing.T) {
 		instructions: []Instruction{
 			Instruction{
 				op:  mov,
-				ret: makeVirtualRegister(2),
+				ret: MakeVirtualRegister(2),
 				arg2: Arg{
 					argType: constant,
 					value:   1,
@@ -142,8 +142,8 @@ func TestMultRegisters(t *testing.T) {
 			},
 			Instruction{
 				op:   mult,
-				ret:  makeVirtualRegister(1),
-				arg1: makeVirtualRegister(2),
+				ret:  MakeVirtualRegister(1),
+				arg1: MakeVirtualRegister(2),
 				arg2: Arg{
 					argType: constant,
 					value:   0,
@@ -164,7 +164,7 @@ func TestDivRegisters(t *testing.T) {
 		instructions: []Instruction{
 			Instruction{
 				op:  mov,
-				ret: makeVirtualRegister(2),
+				ret: MakeVirtualRegister(2),
 				arg2: Arg{
 					argType: constant,
 					value:   1,
@@ -172,8 +172,8 @@ func TestDivRegisters(t *testing.T) {
 			},
 			Instruction{
 				op:   div,
-				ret:  makeVirtualRegister(1),
-				arg1: makeVirtualRegister(2),
+				ret:  MakeVirtualRegister(1),
+				arg1: MakeVirtualRegister(2),
 				arg2: Arg{
 					argType: constant,
 					value:   0,
@@ -187,3 +187,22 @@ func TestDivRegisters(t *testing.T) {
 		t.Errorf("Expected 2, got %d", result)
 	}
 }
+
+// func TestSimpleExpr(t *testing.T) {
+// 	// Representing the simple postfix expression 1 2 3 * +
+// 	ir := IR{
+// 		registersLength: 5,
+// 		instructions: []Isntruction{
+// 			Instruction{
+// 				op: mov,
+// 				ret: MakeVirtualRegister(1),
+// 				arg2: Arg{
+// 					argType: constant,
+// 					value: 0
+// 				},
+// 			},
+// 		},
+// 		constants: []int{2, 3}
+// 	}
+
+// }

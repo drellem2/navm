@@ -23,6 +23,15 @@ func (q *Queue) Pop() int {
 	return i
 }
 
+func (q *Queue) PopLast() int {
+	if len(q.data) == 0 {
+		panic("Empty queue")
+	}
+	i := q.data[len(q.data)-1]
+	q.data = q.data[:len(q.data)-1]
+	return i
+}
+
 func (q *Queue) Len() int {
 	return len(q.data)
 }

@@ -37,6 +37,10 @@ type Register struct {
 	value        int
 }
 
+func (r Register) Value() int {
+	return r.value
+}
+
 // 0 register is not used, will indicate "no register"
 // 1 register will indicate the return value
 
@@ -68,14 +72,70 @@ type IR struct {
 	constants       []int
 }
 
-func (ir *IR) newVirtualRegister() Register {
+func NewIR() *IR {
+	return &IR{registersLength: 1}
+}
+
+func (ir *IR) GetConstant(c int) int {
+	for idx, i := range ir.constants {
+		if i == c {
+			return idx
+		}
+	}
+	ir.constants = append(ir.constants, c)
+	return len(ir.constants) - 1
+}
+
+func (ir *IR) MoveConstant(r Register, c int) {
+	xrn := Instruction{op: mov, ret: r, arg2: Arg{argType: constant, value: ir.GetConstant(c)}}
+	ir.instructions = append(ir.instructions, xrn)
+}
+
+func (ir *IR) AddRegisters(ret Register, r1 Register, r2 Register) {
+	xrn := Instruction{op: add, ret: ret, arg1: r1, arg2: Arg{argType: virtualRegisterArg, value: r2.value}}
+	ir.instructions = append(ir.instructions, xrn)
+}
+
+func (ir *IR) SubRegisters(ret Register, r1 Register, r2 Register) {
+	xrn := Instruction{op: sub, ret: ret, arg1: r1, arg2: Arg{argType: virtualRegisterArg, value: r2.value}}
+	ir.instructions = append(ir.instructions, xrn)
+}
+
+func (ir *IR) MultRegisters(ret Register, r1 Register, r2 Register) {
+	xrn := Instruction{op: mult, ret: ret, arg1: r1, arg2: Arg{argType: virtualRegisterArg, value: r2.value}}
+	ir.instructions = append(ir.instructions, xrn)
+}
+
+func (ir *IR) DivRegisters(ret Register, r1 Register, r2 Register) {
+	xrn := Instruction{op: div, ret: ret, arg1: r1, arg2: Arg{argType: virtualRegisterArg, value: r2.value}}
+	ir.instructions = append(ir.instructions, xrn)
+}
+
+func (ir *IR) AddInstruction(xrn Instruction) {
+	ir.instructions = append(ir.instructions, xrn)
+}
+
+func (ir *IR) NewVirtualRegister() Register {
 	ret := Register{registerType: virtualRegister, value: ir.registersLength}
 	ir.registersLength = ir.registersLength + 1
 	return ret
 }
 
-func makeVirtualRegister(value int) Register {
+func MakeVirtualRegister(value int) Register {
 	return Register{registerType: virtualRegister, value: value}
+}
+
+func (ir *IR) Print() string {
+	ret := ""
+	for _, i := range ir.instructions {
+		ret += i.Print() + "\n"
+	}
+	// Add constants
+	ret += "Constants: "
+	for _, c := range ir.constants {
+		ret += strconv.Itoa(c) + " "
+	}
+	return ret
 }
 
 func (i *Instruction) Print() string {
