@@ -1,5 +1,9 @@
 package navm
 
+import (
+	"strconv"
+)
+
 type Type int
 
 const (
@@ -58,4 +62,8 @@ type IR struct {
 	registersLength int // maximum register number + 1
 	instructions    []Instruction
 	constants       []int
+}
+
+func (i *Instruction) Print() string {
+	return strconv.Itoa(int(i.op)) + " " + strconv.Itoa(i.ret.value) + " " + strconv.Itoa(i.arg1.value) + " " + strconv.Itoa(i.arg2.value)
 }
