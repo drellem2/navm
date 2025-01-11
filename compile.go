@@ -7,12 +7,10 @@ import (
 )
 
 // TODO: In priority order
-// 1. Add move instructions
-// 1.2 make interpreter follow compiler behavior of returning last modified register
-// 2. Add sub/mult/div instructions
-// 3. Make cli demo for interpreter & compiler that evaluates postfix expressions (lib functions)
-// 4. Implement register spilling
-// 5. Get cross-compilation working w/ zig
+// 1. Add sub/mult/div instructions
+// 2. Make cli demo for interpreter & compiler that evaluates postfix expressions (lib functions)
+// 3. Implement register spilling
+// 4. Get cross-compilation working w/ zig
 
 var aarchMac64Registers = []string{"X9", "X10", "X11", "X12", "X13", "X14", "X15"}
 var aarchMacReturnRegister = "X0"

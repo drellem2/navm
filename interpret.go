@@ -19,16 +19,22 @@ func validateRegister(r Register) {
 
 func Interpret(ir *IR) int {
 	r := Runtime{registers: make([]int, ir.registersLength)}
+	lastAssignedRegister := 0
 	for _, i := range ir.instructions {
 		switch i.op {
 		case add:
+			lastAssignedRegister = i.ret.value
 			runAdd(i, &r, ir)
 		case mov:
+			lastAssignedRegister = i.ret.value
 			runMov(i, &r, ir)
 
 		default:
 			panic("Unknown operation")
 		}
+	}
+	if lastAssignedRegister == 0 {
+		return 0
 	}
 	return r.registers[1]
 }
