@@ -1,5 +1,11 @@
 # navm
 
+To run demo:
+`./build.sh`
+`demo interpret "1 2 3 * +"`
+or
+`demo compile "1 2 3 * +"`
+
 To assemble asm output on apple silicon:
 
 - as out.as -o out.o
