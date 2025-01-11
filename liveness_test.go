@@ -7,6 +7,29 @@ import (
 func init() {
 }
 
+func TestPopLast(t *testing.T) {
+	q := LivenessQueue{}
+	q.active = true
+	q.Push(Interval{start: 0, end: 1})
+	q.Push(Interval{start: 1, end: 2})
+	q.Push(Interval{start: 2, end: 3})
+	q.Push(Interval{start: 3, end: 4})
+	i := q.PopLast()
+	if i.end != 4 {
+		t.Errorf("Expected 4, got %d", i.end)
+	}
+	if q.Len() != 3 {
+		t.Errorf("Expected 3, got %d", q.Len())
+	}
+	if q.Peek().end != 1 {
+		t.Errorf("Expected 1, got %d", q.Peek().end)
+	}
+	j := q.PopLast()
+	if j.end != 3 {
+		t.Errorf("Expected 3, got %d", j.end)
+	}
+}
+
 func TestLivenessQueueActiveStartsWithSmall(t *testing.T) {
 	q := LivenessQueue{}
 	q.active = true
@@ -96,29 +119,29 @@ func TestLivenessQueueInactive(t *testing.T) {
 	q.Push(Interval{start: 1, end: 2})
 	q.Push(Interval{start: 2, end: 3})
 	q.Push(Interval{start: 0, end: 1})
-	if q.intervals[0].end != 4 {
-		t.Errorf("Expected 4, got %d", q.intervals[0].end)
+	if q.intervals[0].end != 1 {
+		t.Errorf("Expected 1, got %d", q.intervals[0].end)
 	}
-	if q.intervals[1].end != 3 {
-		t.Errorf("Expected 3, got %d", q.intervals[1].end)
+	if q.intervals[1].end != 2 {
+		t.Errorf("Expected 2, got %d", q.intervals[1].end)
 	}
-	if q.intervals[2].end != 2 {
-		t.Errorf("Expected 2, got %d", q.intervals[2].end)
+	if q.intervals[2].end != 3 {
+		t.Errorf("Expected 3, got %d", q.intervals[2].end)
 	}
-	if q.intervals[3].end != 1 {
+	if q.intervals[3].end != 4 {
 		t.Errorf("Expected 1, got %d", q.intervals[3].end)
 	}
 
 	// Test pop
 	i := q.Pop()
-	if i.end != 4 {
-		t.Errorf("Expected 4, got %d", i.end)
+	if i.end != 1 {
+		t.Errorf("Expected 1, got %d", i.end)
 	}
 	if q.Len() != 3 {
 		t.Errorf("Expected 3, got %d", q.Len())
 	}
-	if q.Peek().end != 3 {
-		t.Errorf("Expected 3, got %d", q.Peek().end)
+	if q.Peek().end != 2 {
+		t.Errorf("Expected 2, got %d", q.Peek().end)
 	}
 
 	// Test remove
@@ -127,17 +150,17 @@ func TestLivenessQueueInactive(t *testing.T) {
 	if q.Len() != 2 {
 		t.Errorf("Expected 2, got %d", q.Len())
 	}
-	if q.Peek().end != 3 {
-		t.Errorf("Expected 3, got %d", q.Peek().end)
+	if q.Peek().end != 2 {
+		t.Errorf("Expected 2, got %d", q.Peek().end)
 	}
 
 	j := q.Pop()
-	if j.end != 3 {
-		t.Errorf("Expected 3, got %d", j.end)
+	if j.end != 2 {
+		t.Errorf("Expected 2, got %d", j.end)
 	}
 
-	if q.Peek().end != 1 {
-		t.Errorf("Expected 1, got %d", q.Peek().end)
+	if q.Peek().end != 4 {
+		t.Errorf("Expected 4, got %d", q.Peek().end)
 	}
 
 }

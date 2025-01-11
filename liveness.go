@@ -6,14 +6,15 @@ import (
 
 // Liveness interval, half open [start, end)
 type Interval struct {
-	register Register
-	start    int
-	end      int
+	physicalRegister int
+	register         Register
+	start            int
+	end              int
 }
 
 // Two modes for different uses in the register allocation linear scan
 // If active, we sort by start time ascending as is currently the case
-// If inactive, we sort by end time descending
+// If inactive, we sort by end time ascending
 
 // Priority queue with smallest start values first
 type LivenessQueue struct {
@@ -38,7 +39,7 @@ func (q *LivenessQueue) Push(i Interval) {
 
 	} else {
 		for j, v := range q.intervals {
-			if v.end < i.end {
+			if v.end > i.end {
 				q.intervals = append(q.intervals[:j], append([]Interval{i}, q.intervals[j:]...)...)
 				return
 			}
@@ -53,6 +54,15 @@ func (q *LivenessQueue) Pop() Interval {
 	}
 	i := q.intervals[0]
 	q.intervals = q.intervals[1:]
+	return i
+}
+
+func (q *LivenessQueue) PopLast() Interval {
+	if len(q.intervals) == 0 {
+		panic("Empty queue")
+	}
+	i := q.intervals[len(q.intervals)-1]
+	q.intervals = q.intervals[:len(q.intervals)-1]
 	return i
 }
 
