@@ -8,6 +8,7 @@ import (
 
 // TODO: In priority order
 // 1. Add move instructions
+// 2. Make cli demo for interpreter & compiler that evaluates postfix expressions
 // 3. Implement register spilling
 
 var aarchMac64Registers = []string{"X9", "X10", "X11", "X12", "X13", "X14", "X15"}
