@@ -125,3 +125,43 @@ func TestAllocateRegisters(t *testing.T) {
 		t.Errorf("Expected 3, got %d", ir.registersLength)
 	}
 }
+
+func TestCompile(t *testing.T) {
+	ir := IR{
+		registersLength: 3,
+		instructions: []Instruction{
+			Instruction{
+				op:  add,
+				ret: makeVirtualRegister(2),
+				arg1: Arg{
+					argType: constant,
+					value:   0,
+				},
+				arg2: Arg{
+					argType: constant,
+					value:   1,
+				},
+			},
+			Instruction{
+				op:  add,
+				ret: makeVirtualRegister(1),
+				arg1: Arg{
+					argType: virtualRegisterArg,
+					value:   2,
+				},
+				arg2: Arg{
+					argType: constant,
+					value:   1,
+				},
+			},
+		},
+		constants: []int{1, 2},
+	}
+
+	result := compile(&ir)
+	println(result)
+	if result != "" {
+		t.Errorf("Expected empty string, got %s", result)
+	}
+
+}
