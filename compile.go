@@ -7,9 +7,16 @@ import (
 )
 
 // TODO: In priority order
-// 0. Addresses need to point to registers, not constants (e.g. [X0, #4]) (not [#0, #4])
-// 0.1 Then make sure that these are working in the register allocation / liveness analysis
-// 1. Implement register spilling
+// 0. Add stack manipulation commands and test add to load/store test
+//    so it won't segfault
+/*
+   // Example:
+   SUB SP, SP, #64        // Reserve 64 bytes on the stack
+   STR X0, [SP]           // Store X0 at the top of the stack
+   STR X1, [SP, #8]       // Store X1 at SP + 8
+   ADD SP, SP, #64        // Free 64 bytes by restoring SP
+*/
+// 1. Implement register spilling (on the stack)
 // 2. Get cross-compilation working w/ zig
 var aarchMac64Registers = []string{"X9", "X10", "X11", "X12", "X13", "X14", "X15"}
 var aarchMacReturnRegister = "X0"
