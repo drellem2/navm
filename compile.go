@@ -7,9 +7,10 @@ import (
 )
 
 // TODO: In priority order
+// 0. Addresses need to point to registers, not constants (e.g. [X0, #4]) (not [#0, #4])
+// 0.1 Then make sure that these are working in the register allocation / liveness analysis
 // 1. Implement register spilling
 // 2. Get cross-compilation working w/ zig
-
 var aarchMac64Registers = []string{"X9", "X10", "X11", "X12", "X13", "X14", "X15"}
 var aarchMacReturnRegister = "X0"
 
@@ -34,8 +35,9 @@ func placeConstantsInRegisters(ir *IR) {
 				}
 				xns = append(xns, movInstr)
 				instr.arg2 = Arg{
-					argType: virtualRegisterArg,
-					value:   vreg.value,
+					argType:           registerArg,
+					isVirtualRegister: true,
+					value:             vreg.value,
 				}
 				xns = append(xns, instr)
 				continue
@@ -48,7 +50,16 @@ func placeConstantsInRegisters(ir *IR) {
 
 func Compile(ir *IR) string {
 	placeConstantsInRegisters(ir)
+	println("Before allocating")
+	for _, instr := range ir.instructions {
+		println(instr.Print())
+	}
 	allocateRegisters(ir)
+	println("After allocating")
+	// print instructions now that they are allocated
+	for _, instr := range ir.instructions {
+		println(instr.Print())
+	}
 
 	// Now do really simple code generation
 	// Example:
@@ -80,6 +91,11 @@ func Compile(ir *IR) string {
 		case mov:
 			result += getTwoArgInstruction("mov", instr, ir)
 			lastRegister = instr.ret.value
+		case load:
+			result += getTwoArgInstruction("ldr", instr, ir)
+			lastRegister = instr.ret.value
+		case store:
+			result += getTwoArgNoRetInstruction("str", instr, ir)
 		default:
 			panic("Unknown operation: " + strconv.Itoa(int(instr.op)))
 		}
@@ -107,6 +123,13 @@ func getTwoArgInstruction(name string, instr Instruction, ir *IR) string {
 	return "  " + name + " " + retRegister + ", " + arg2 + "\n"
 }
 
+func getTwoArgNoRetInstruction(name string, instr Instruction, ir *IR) string {
+	println("getTwoArgNoRetInstruction: ", instr.arg1.value)
+	arg1Register := getPhysicalRegister(instr.arg1.value)
+	arg2 := getArg(instr.arg2, ir)
+	return "  " + name + " " + arg1Register + ", " + arg2 + "\n"
+}
+
 func getInstruction(name string, instr Instruction, ir *IR) string {
 	retRegister := getPhysicalRegister(instr.ret.value)
 	arg1 := getPhysicalRegister(instr.arg1.value)
@@ -118,13 +141,21 @@ func getArg(arg Arg, ir *IR) string {
 	switch arg.argType {
 	case constant:
 		return getConstant(arg.value, ir)
-	case physicalRegisterArg:
+	case registerArg:
+		if arg.isVirtualRegister {
+			panic("Virtual register not allowed at code generation time")
+		}
 		return getPhysicalRegister(arg.value)
-	case virtualRegisterArg:
-		panic("Virtual register not allowed at code generation time")
+	case address:
+		return getAddress(arg, ir)
 	default:
 		panic("Unknown argument type")
 	}
+}
+
+func getAddress(arg Arg, ir *IR) string {
+	println("GetAddress: " + strconv.Itoa(arg.value))
+	return "[" + getPhysicalRegister(arg.value) + ", #" + strconv.Itoa(ir.constants[arg.offsetConstant]) + "]"
 }
 
 func getConstant(i int, ir *IR) string {
@@ -182,6 +213,7 @@ func allocateRegisters(ir *IR) {
 		}
 
 		// assign a register
+		println("Assigning register", interval.register.value, " to ", interval.register.value)
 		interval.physicalRegister = physicalRegisters.Pop()
 		activeQueue.Push(interval)
 	}
@@ -207,8 +239,9 @@ func allocateRegisters(ir *IR) {
 			instr.ret.registerType = physicalRegister
 			instr.ret.value = allocated[instr.ret.value]
 		}
-		if instr.arg2.argType == virtualRegisterArg {
-			instr.arg2.argType = physicalRegisterArg
+		if instr.arg2.argType == registerArg && instr.arg2.isVirtualRegister {
+			instr.arg2.argType = registerArg
+			instr.arg2.isVirtualRegister = false
 			instr.arg2.value = allocated[instr.arg2.value]
 		}
 		ir.instructions[i] = instr

@@ -95,7 +95,7 @@ func TestAllocateRegisters(t *testing.T) {
 		if i.ret.registerType == virtualRegister {
 			t.Errorf("Expected physical register, got virtual")
 		}
-		if i.arg2.argType == virtualRegisterArg {
+		if i.arg2.argType == registerArg && i.arg2.isVirtualRegister {
 			t.Errorf("Expected physical register, got virtual")
 		}
 	}
@@ -107,7 +107,7 @@ func TestAllocateRegisters(t *testing.T) {
 		if i.ret.registerType == physicalRegister && i.ret.value == 0 {
 			t.Errorf("Expected non-zero register")
 		}
-		if i.arg2.argType == physicalRegisterArg && i.arg2.value == 0 {
+		if i.arg2.argType == registerArg && !i.arg2.isVirtualRegister && i.arg2.value == 0 {
 			t.Errorf("Expected non-zero register")
 		}
 	}
@@ -174,8 +174,9 @@ func TestMov(t *testing.T) {
 				op:  mov,
 				ret: MakeVirtualRegister(1),
 				arg2: Arg{
-					argType: virtualRegisterArg,
-					value:   2,
+					argType:           registerArg,
+					isVirtualRegister: true,
+					value:             2,
 				},
 			},
 		},
@@ -275,5 +276,44 @@ func TestDiv(t *testing.T) {
 	result := Compile(&ir)
 	if result == "" {
 		t.Errorf("Expected non-empty string, got %s", result)
+	}
+}
+
+func TestLoadAndStoreCompile(t *testing.T) {
+	ir := IR{
+		registersLength: 3,
+		instructions: []Instruction{
+			Instruction{
+				op:  mov,
+				ret: MakeVirtualRegister(2),
+				arg2: Arg{
+					argType: constant,
+					value:   0,
+				},
+			},
+			Instruction{
+				op:   store,
+				arg1: MakeVirtualRegister(2),
+				arg2: Arg{
+					argType:        address,
+					value:          0,
+					offsetConstant: 1,
+				},
+			},
+			Instruction{
+				op:  load,
+				ret: MakeVirtualRegister(1),
+				arg2: Arg{
+					argType:        address,
+					value:          0,
+					offsetConstant: 1,
+				},
+			},
+		},
+		constants: []int{2, 1},
+	}
+	result := Compile(&ir)
+	if result != "" {
+		t.Errorf("Unexpected empty string, got %s", result)
 	}
 }

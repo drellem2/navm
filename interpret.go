@@ -68,9 +68,10 @@ func runMov(i Instruction, r *Runtime, ir *IR) {
 		panic("No argument type for mov op")
 	case constant:
 		arg2 = ir.constants[i.arg2.value]
-	case physicalRegisterArg:
-		panic("Physical register not legal when interpreting")
-	case virtualRegisterArg:
+	case registerArg:
+		if !i.arg2.isVirtualRegister {
+			panic("Physical register not legal when interpreting")
+		}
 		arg2 = r.registers[i.arg2.value]
 	default:
 		panic("Unknown argument type")
@@ -87,10 +88,11 @@ func runAdd(i Instruction, r *Runtime, ir *IR) {
 		panic("No argument type for add op")
 	case constant:
 		arg2 = ir.constants[i.arg2.value]
-	case virtualRegisterArg:
+	case registerArg:
+		if !i.arg2.isVirtualRegister {
+			panic("Physical register not legal when interpreting")
+		}
 		arg2 = r.registers[i.arg2.value]
-	case physicalRegisterArg:
-		panic("Physical register not legal when interpreting")
 	default:
 		panic("Unknown argument type")
 	}
@@ -106,10 +108,11 @@ func runSub(i Instruction, r *Runtime, ir *IR) {
 		panic("No argument type for add op")
 	case constant:
 		arg2 = ir.constants[i.arg2.value]
-	case virtualRegisterArg:
+	case registerArg:
+		if !i.arg2.isVirtualRegister {
+			panic("Physical register not legal when interpreting")
+		}
 		arg2 = r.registers[i.arg2.value]
-	case physicalRegisterArg:
-		panic("Physical register not legal when interpreting")
 	default:
 		panic("Unknown argument type")
 	}
@@ -125,10 +128,11 @@ func runMult(i Instruction, r *Runtime, ir *IR) {
 		panic("No argument type for add op")
 	case constant:
 		arg2 = ir.constants[i.arg2.value]
-	case virtualRegisterArg:
+	case registerArg:
+		if !i.arg2.isVirtualRegister {
+			panic("Physical register not legal when interpreting")
+		}
 		arg2 = r.registers[i.arg2.value]
-	case physicalRegisterArg:
-		panic("Physical register not legal when interpreting")
 	default:
 		panic("Unknown argument type")
 	}
@@ -144,10 +148,11 @@ func runDiv(i Instruction, r *Runtime, ir *IR) {
 		panic("No argument type for add op")
 	case constant:
 		arg2 = ir.constants[i.arg2.value]
-	case virtualRegisterArg:
+	case registerArg:
+		if !i.arg2.isVirtualRegister {
+			panic("Physical register not legal when interpreting")
+		}
 		arg2 = r.registers[i.arg2.value]
-	case physicalRegisterArg:
-		panic("Physical register not legal when interpreting")
 	default:
 		panic("Unknown argument type")
 	}
@@ -162,18 +167,19 @@ func runLoad(i Instruction, r *Runtime, ir *IR) {
 	r.registers[i.ret.value] = 0
 	for t := 0; t < 8; t++ {
 		r.registers[i.ret.value] = r.registers[i.ret.value] << 8
-		r.registers[i.ret.value] = r.registers[i.ret.value] | int(r.memory[i.arg2.value+ir.constants[i.arg2.offsetConstant]+t])
+		r.registers[i.ret.value] = r.registers[i.ret.value] | int(r.memory[r.registers[i.arg2.value]+ir.constants[i.arg2.offsetConstant]+t])
 	}
 }
 
 func runStore(i Instruction, r *Runtime, ir *IR) {
 	validateRegister(i.arg1)
+	// TODO validateAddress(i.arg2)
 	if i.arg2.argType != address {
 		panic("Store arg2 should be an address")
 	}
 	// Now we do the opposite and store 8 bytes
 	for t := 0; t < 8; t++ {
-		r.memory[i.arg2.value+ir.constants[i.arg2.offsetConstant]+t] = byte(r.registers[i.arg1.value] >> uint(8*(7-t)))
+		r.memory[r.registers[i.arg2.value]+ir.constants[i.arg2.offsetConstant]+t] = byte(r.registers[i.arg1.value] >> uint(8*(7-t)))
 	}
 }
 

@@ -49,18 +49,18 @@ func (r Register) Value() int {
 type ArgType int
 
 const (
-	noArgType           ArgType = iota
-	virtualRegisterArg  ArgType = iota
-	physicalRegisterArg ArgType = iota
-	constant            ArgType = iota
-	address             ArgType = iota
+	noArgType   ArgType = iota
+	registerArg ArgType = iota
+	constant    ArgType = iota
+	address     ArgType = iota
 )
 
 // Basically a union
 type Arg struct {
-	argType        ArgType
-	value          int
-	offsetConstant int
+	argType           ArgType
+	isVirtualRegister bool
+	value             int
+	offsetConstant    int
 }
 
 type Instruction struct {
@@ -96,22 +96,34 @@ func (ir *IR) MoveConstant(r Register, c int) {
 }
 
 func (ir *IR) AddRegisters(ret Register, r1 Register, r2 Register) {
-	xrn := Instruction{op: add, ret: ret, arg1: r1, arg2: Arg{argType: virtualRegisterArg, value: r2.value}}
+	xrn := Instruction{op: add, ret: ret, arg1: r1, arg2: Arg{
+		argType:           registerArg,
+		isVirtualRegister: true,
+		value:             r2.value}}
 	ir.instructions = append(ir.instructions, xrn)
 }
 
 func (ir *IR) SubRegisters(ret Register, r1 Register, r2 Register) {
-	xrn := Instruction{op: sub, ret: ret, arg1: r1, arg2: Arg{argType: virtualRegisterArg, value: r2.value}}
+	xrn := Instruction{op: sub, ret: ret, arg1: r1, arg2: Arg{
+		argType:           registerArg,
+		isVirtualRegister: true,
+		value:             r2.value}}
 	ir.instructions = append(ir.instructions, xrn)
 }
 
 func (ir *IR) MultRegisters(ret Register, r1 Register, r2 Register) {
-	xrn := Instruction{op: mult, ret: ret, arg1: r1, arg2: Arg{argType: virtualRegisterArg, value: r2.value}}
+	xrn := Instruction{op: mult, ret: ret, arg1: r1, arg2: Arg{
+		argType:           registerArg,
+		isVirtualRegister: true,
+		value:             r2.value}}
 	ir.instructions = append(ir.instructions, xrn)
 }
 
 func (ir *IR) DivRegisters(ret Register, r1 Register, r2 Register) {
-	xrn := Instruction{op: div, ret: ret, arg1: r1, arg2: Arg{argType: virtualRegisterArg, value: r2.value}}
+	xrn := Instruction{op: div, ret: ret, arg1: r1, arg2: Arg{
+		argType:           registerArg,
+		isVirtualRegister: true,
+		value:             r2.value}}
 	ir.instructions = append(ir.instructions, xrn)
 }
 
