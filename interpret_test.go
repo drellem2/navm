@@ -201,8 +201,8 @@ func TestLoadAndStore(t *testing.T) {
 				},
 			},
 			Instruction{
-				op:  store,
-				ret: MakeVirtualRegister(2),
+				op:   store,
+				arg1: MakeVirtualRegister(2),
 				arg2: Arg{
 					argType:        address,
 					value:          0,

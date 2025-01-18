@@ -167,13 +167,13 @@ func runLoad(i Instruction, r *Runtime, ir *IR) {
 }
 
 func runStore(i Instruction, r *Runtime, ir *IR) {
-	validateRegister(i.ret)
+	validateRegister(i.arg1)
 	if i.arg2.argType != address {
 		panic("Store arg2 should be an address")
 	}
 	// Now we do the opposite and store 8 bytes
 	for t := 0; t < 8; t++ {
-		r.memory[i.arg2.value+ir.constants[i.arg2.offsetConstant]+t] = byte(r.registers[i.ret.value] >> uint(8*(7-t)))
+		r.memory[i.arg2.value+ir.constants[i.arg2.offsetConstant]+t] = byte(r.registers[i.arg1.value] >> uint(8*(7-t)))
 	}
 }
 
