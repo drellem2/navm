@@ -2,6 +2,7 @@ package navm
 
 type Runtime struct {
 	registers []int
+	memory    []byte
 }
 
 func validateRegister(r Register) {
@@ -18,9 +19,12 @@ func validateRegister(r Register) {
 }
 
 func Interpret(ir *IR) int {
-	r := Runtime{registers: make([]int, ir.registersLength)}
+	r := Runtime{
+		registers: make([]int, ir.registersLength),
+		memory:    make([]byte, 1024)}
 	lastAssignedRegister := 0
 	for _, i := range ir.instructions {
+		(&r).print()
 		switch i.op {
 		case add:
 			lastAssignedRegister = i.ret.value
@@ -37,6 +41,11 @@ func Interpret(ir *IR) int {
 		case mov:
 			lastAssignedRegister = i.ret.value
 			runMov(i, &r, ir)
+		case load:
+			lastAssignedRegister = i.ret.value
+			runLoad(i, &r, ir)
+		case store:
+			runStore(i, &r, ir)
 
 		default:
 			panic("Unknown operation")
@@ -143,4 +152,40 @@ func runDiv(i Instruction, r *Runtime, ir *IR) {
 		panic("Unknown argument type")
 	}
 	r.registers[i.ret.value] = r.registers[i.arg1.value] / arg2
+}
+
+func runLoad(i Instruction, r *Runtime, ir *IR) {
+	validateRegister(i.ret)
+	if i.arg2.argType != address {
+		panic("Load arg2 should be an address")
+	}
+	r.registers[i.ret.value] = 0
+	for t := 0; t < 8; t++ {
+		r.registers[i.ret.value] = r.registers[i.ret.value] << 8
+		r.registers[i.ret.value] = r.registers[i.ret.value] | int(r.memory[i.arg2.value+ir.constants[i.arg2.offsetConstant]+t])
+	}
+}
+
+func runStore(i Instruction, r *Runtime, ir *IR) {
+	validateRegister(i.ret)
+	if i.arg2.argType != address {
+		panic("Store arg2 should be an address")
+	}
+	// Now we do the opposite and store 8 bytes
+	for t := 0; t < 8; t++ {
+		r.memory[i.arg2.value+ir.constants[i.arg2.offsetConstant]+t] = byte(r.registers[i.ret.value] >> uint(8*(7-t)))
+	}
+}
+
+func (r *Runtime) print() {
+	for idx, i := range r.registers {
+		if i != 0 {
+			println("Register ", idx, " = ", i)
+		}
+	}
+	for idx, i := range r.memory {
+		if i != 0 {
+			println("Memory ", idx, " = ", i)
+		}
+	}
 }

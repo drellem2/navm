@@ -14,12 +14,14 @@ const (
 type Op int
 
 const (
-	noOp Op = iota
-	add  Op = iota
-	mov  Op = iota
-	sub  Op = iota
-	mult Op = iota
-	div  Op = iota
+	noOp  Op = iota
+	add   Op = iota
+	mov   Op = iota
+	sub   Op = iota
+	mult  Op = iota
+	div   Op = iota
+	load  Op = iota
+	store Op = iota
 )
 
 // Add concept of virtual vs physical registers
@@ -51,12 +53,14 @@ const (
 	virtualRegisterArg  ArgType = iota
 	physicalRegisterArg ArgType = iota
 	constant            ArgType = iota
+	address             ArgType = iota
 )
 
 // Basically a union
 type Arg struct {
-	argType ArgType
-	value   int
+	argType        ArgType
+	value          int
+	offsetConstant int
 }
 
 type Instruction struct {
@@ -108,6 +112,22 @@ func (ir *IR) MultRegisters(ret Register, r1 Register, r2 Register) {
 
 func (ir *IR) DivRegisters(ret Register, r1 Register, r2 Register) {
 	xrn := Instruction{op: div, ret: ret, arg1: r1, arg2: Arg{argType: virtualRegisterArg, value: r2.value}}
+	ir.instructions = append(ir.instructions, xrn)
+}
+
+func (ir *IR) Load(ret Register, addr Arg) {
+	if addr.argType != address {
+		panic("Argument addr must be an address")
+	}
+	xrn := Instruction{op: load, ret: ret, arg2: addr}
+	ir.instructions = append(ir.instructions, xrn)
+}
+
+func (ir *IR) Store(reg Register, addr Arg) {
+	if addr.argType != address {
+		panic("Argument addr must be an address")
+	}
+	xrn := Instruction{op: store, ret: reg, arg2: addr}
 	ir.instructions = append(ir.instructions, xrn)
 }
 

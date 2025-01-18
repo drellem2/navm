@@ -188,6 +188,45 @@ func TestDivRegisters(t *testing.T) {
 	}
 }
 
+func TestLoadAndStore(t *testing.T) {
+	ir := IR{
+		registersLength: 3,
+		instructions: []Instruction{
+			Instruction{
+				op:  mov,
+				ret: MakeVirtualRegister(2),
+				arg2: Arg{
+					argType: constant,
+					value:   0,
+				},
+			},
+			Instruction{
+				op:  store,
+				ret: MakeVirtualRegister(2),
+				arg2: Arg{
+					argType:        address,
+					value:          0,
+					offsetConstant: 1,
+				},
+			},
+			Instruction{
+				op:  load,
+				ret: MakeVirtualRegister(1),
+				arg2: Arg{
+					argType:        address,
+					value:          0,
+					offsetConstant: 1,
+				},
+			},
+		},
+		constants: []int{2, 1},
+	}
+	result := Interpret(&ir)
+	if result != 2 {
+		t.Errorf("Expected 2, got %d", result)
+	}
+}
+
 // func TestSimpleExpr(t *testing.T) {
 // 	// Representing the simple postfix expression 1 2 3 * +
 // 	ir := IR{
