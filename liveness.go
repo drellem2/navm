@@ -120,7 +120,7 @@ func makeIntervals(ir *IR) []Interval {
 			intervals[instr.ret.value].start = min(intervals[instr.ret.value].start, i)
 			intervals[instr.ret.value].end = i + 1
 		}
-		if instr.arg2.argType == registerArg && instr.arg2.isVirtualRegister {
+		if (instr.arg2.argType == registerArg && instr.arg2.isVirtualRegister) || instr.arg2.argType == address {
 			intervals[instr.arg2.value].start = min(intervals[instr.arg2.value].start, i)
 			intervals[instr.arg2.value].end = i + 1
 		}

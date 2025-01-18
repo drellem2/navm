@@ -296,7 +296,7 @@ func TestLoadAndStoreCompile(t *testing.T) {
 				arg1: MakeVirtualRegister(2),
 				arg2: Arg{
 					argType:        address,
-					value:          0,
+					value:          2,
 					offsetConstant: 1,
 				},
 			},
@@ -305,7 +305,7 @@ func TestLoadAndStoreCompile(t *testing.T) {
 				ret: MakeVirtualRegister(1),
 				arg2: Arg{
 					argType:        address,
-					value:          0,
+					value:          2,
 					offsetConstant: 1,
 				},
 			},

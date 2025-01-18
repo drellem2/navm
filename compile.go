@@ -50,16 +50,7 @@ func placeConstantsInRegisters(ir *IR) {
 
 func Compile(ir *IR) string {
 	placeConstantsInRegisters(ir)
-	println("Before allocating")
-	for _, instr := range ir.instructions {
-		println(instr.Print())
-	}
 	allocateRegisters(ir)
-	println("After allocating")
-	// print instructions now that they are allocated
-	for _, instr := range ir.instructions {
-		println(instr.Print())
-	}
 
 	// Now do really simple code generation
 	// Example:
@@ -124,7 +115,6 @@ func getTwoArgInstruction(name string, instr Instruction, ir *IR) string {
 }
 
 func getTwoArgNoRetInstruction(name string, instr Instruction, ir *IR) string {
-	println("getTwoArgNoRetInstruction: ", instr.arg1.value)
 	arg1Register := getPhysicalRegister(instr.arg1.value)
 	arg2 := getArg(instr.arg2, ir)
 	return "  " + name + " " + arg1Register + ", " + arg2 + "\n"
@@ -154,7 +144,6 @@ func getArg(arg Arg, ir *IR) string {
 }
 
 func getAddress(arg Arg, ir *IR) string {
-	println("GetAddress: " + strconv.Itoa(arg.value))
 	return "[" + getPhysicalRegister(arg.value) + ", #" + strconv.Itoa(ir.constants[arg.offsetConstant]) + "]"
 }
 
@@ -213,7 +202,6 @@ func allocateRegisters(ir *IR) {
 		}
 
 		// assign a register
-		println("Assigning register", interval.register.value, " to ", interval.register.value)
 		interval.physicalRegister = physicalRegisters.Pop()
 		activeQueue.Push(interval)
 	}
@@ -239,8 +227,7 @@ func allocateRegisters(ir *IR) {
 			instr.ret.registerType = physicalRegister
 			instr.ret.value = allocated[instr.ret.value]
 		}
-		if instr.arg2.argType == registerArg && instr.arg2.isVirtualRegister {
-			instr.arg2.argType = registerArg
+		if (instr.arg2.argType == registerArg && instr.arg2.isVirtualRegister) || instr.arg2.argType == address {
 			instr.arg2.isVirtualRegister = false
 			instr.arg2.value = allocated[instr.arg2.value]
 		}
