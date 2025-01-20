@@ -13,7 +13,7 @@ import (
 // 1. Add sp register
 /*
    // Example:
-   SUB SP, SP, #64        // Reserve 64 bytes on the stack
+   SUB SP, SP, #16        // Reserve 64 bytes on the stack
    STR X0, [SP]           // Store X0 at the top of the stack
    STR X1, [SP, #8]       // Store X1 at SP + 8
    ADD SP, SP, #64        // Free 64 bytes by restoring SP
@@ -231,7 +231,7 @@ func allocateRegisters(a *Architecture, ir *IR) {
 			instr.ret.registerType = physicalRegister
 			instr.ret.value = allocated[instr.ret.value]
 		}
-		if (instr.arg2.argType == registerArg && instr.arg2.isVirtualRegister) || instr.arg2.argType == address {
+		if instr.arg2.isVirtualRegister && (instr.arg2.argType == registerArg || instr.arg2.argType == address) {
 			instr.arg2.isVirtualRegister = false
 			instr.arg2.value = allocated[instr.arg2.value]
 		}

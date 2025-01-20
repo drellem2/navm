@@ -1,5 +1,9 @@
 package navm
 
+import (
+	"strconv"
+)
+
 const AARCH64_MACOS_NONE = "aarch64-macos-none"
 
 type Architecture struct {
@@ -26,6 +30,12 @@ func MakeAarch64MacArchitecture() *Architecture {
 func (a *Architecture) GetPhysicalRegister(register int) string {
 	if register == 0 {
 		panic("0 register should never be used")
+	}
+	if register == STACK_POINTER_REGISTER {
+		return a.StackPointerRegister
+	}
+	if register < 0 {
+		panic("Invalid register: " + strconv.Itoa(register))
 	}
 	return a.Registers64[register-1]
 }

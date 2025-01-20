@@ -283,6 +283,15 @@ func TestLoadAndStoreCompile(t *testing.T) {
 	ir := IR{
 		registersLength: 3,
 		instructions: []Instruction{
+			Instruction{ // reserve 16 bytes on the stack
+				op:   sub,
+				ret:  GetStackPointer(),
+				arg1: GetStackPointer(),
+				arg2: Arg{
+					argType: constant,
+					value:   2, // only using 8 bytes but need to align to 16
+				},
+			},
 			Instruction{
 				op:  mov,
 				ret: MakeVirtualRegister(2),
@@ -294,26 +303,36 @@ func TestLoadAndStoreCompile(t *testing.T) {
 			Instruction{
 				op:   store,
 				arg1: MakeVirtualRegister(2),
+				arg2: GetStackPointer().ToAddress(3), // 0 offset
+			},
+			Instruction{
+				op:   load,
+				ret:  MakeVirtualRegister(1),
+				arg2: GetStackPointer().ToAddress(3), // 0 offset
+			},
+			Instruction{ // restore 16 bytes on the stack
+				op:   add,
+				ret:  GetStackPointer(),
+				arg1: GetStackPointer(),
 				arg2: Arg{
-					argType:        address,
-					value:          2,
-					offsetConstant: 1,
+					argType: constant,
+					value:   2,
 				},
 			},
 			Instruction{
-				op:  load,
-				ret: MakeVirtualRegister(1),
+				op:   add,
+				ret:  MakeVirtualRegister(1),
+				arg1: MakeVirtualRegister(1),
 				arg2: Arg{
-					argType:        address,
-					value:          2,
-					offsetConstant: 1,
+					argType: constant,
+					value:   3,
 				},
-			},
+			}, // Silly, we add 0 to register 1 to make it the most recently used so it will return
 		},
-		constants: []int{2, 1},
+		constants: []int{2, 1, 16, 0},
 	}
 	result := Compile(&ir, AARCH64_MACOS_NONE)
-	if result != "" {
+	if result == "" {
 		t.Errorf("Unexpected empty string, got %s", result)
 	}
 }

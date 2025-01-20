@@ -163,6 +163,14 @@ func GetStackPointer() Register {
 	return Register{registerType: physicalRegister, value: STACK_POINTER_REGISTER}
 }
 
+func (r Register) ToArg() Arg {
+	return Arg{argType: registerArg, isVirtualRegister: r.registerType == virtualRegister, value: r.value}
+}
+
+func (r Register) ToAddress(offset int) Arg {
+	return Arg{argType: address, isVirtualRegister: r.registerType == virtualRegister, value: r.value, offsetConstant: offset}
+}
+
 func (ir *IR) Print() string {
 	ret := ""
 	for _, i := range ir.instructions {
