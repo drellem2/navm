@@ -74,17 +74,6 @@ func Compile(ir *IR, architecture string) string {
 	addSpillInstructions(a, ir)
 	freeStackSpace(a, ir, stackMax)
 
-	// Now do really simple code generation
-	// Example:
-	// .global _start
-	// .align 2
-	// _start:
-	//   mov X9, #1
-	//   mov X10, #2
-	//   add X0, X9, X10
-	//   mov X16, #1
-	//   svc 0
-
 	result := ".global _start\n.align 2\n\n_start:\n"
 	for _, instr := range ir.instructions {
 		switch instr.op {
@@ -166,6 +155,8 @@ func freeStackSpace(a *Architecture, ir *IR, stackMax int) {
 	finalInstr := ir.instructions[len(ir.instructions)-1]
 	if finalInstr.op == ret {
 		ir.instructions = append(ir.instructions[:len(ir.instructions)-1], xrn, finalInstr)
+		println("Found a ret, new instr ends with ", finalInstr.Print())
+		println("Now ends with ", ir.instructions[len(ir.instructions)-1].Print())
 	} else {
 		ir.instructions = append(ir.instructions, xrn)
 	}
@@ -223,6 +214,7 @@ func GetStackAddress(a *Architecture, ir *IR, stackPos int) Arg {
 
 // For now we just assume the last register assigned is the return register
 func getReturn() string {
+	println("Adding return")
 	return "  ret\n"
 }
 

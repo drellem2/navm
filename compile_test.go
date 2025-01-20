@@ -382,7 +382,7 @@ func TestSpill(t *testing.T) {
 	result2 := Interpret(ir)
 	result := Compile(ir, AARCH64_MACOS_NONE)
 	println("Interpreted result is: ", result2)
-	if result != "" {
+	if result == "" {
 		t.Errorf("Unexpected empty string, got %s", result)
 	}
 }

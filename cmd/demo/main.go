@@ -124,30 +124,30 @@ func toIR(expr string) *navm.IR {
 			}
 			op2 := operands.PopLast()
 			op1 := operands.PopLast()
+			var vreg navm.Register
+			if operands.Empty() && tokens.empty() {
+				vreg = navm.GetReturnRegister()
+			} else {
+				vreg = ir.NewVirtualRegister()
+			}
 			switch t.value {
 			case "+":
-				vreg := ir.NewVirtualRegister()
 				ir.AddRegisters(vreg, navm.MakeVirtualRegister(op1), navm.MakeVirtualRegister(op2))
-				operands.Push(vreg.Value())
 			case "-":
-				vreg := ir.NewVirtualRegister()
 				ir.SubRegisters(vreg, navm.MakeVirtualRegister(op1), navm.MakeVirtualRegister(op2))
-				operands.Push(vreg.Value())
 			case "*":
-				vreg := ir.NewVirtualRegister()
 				ir.MultRegisters(vreg, navm.MakeVirtualRegister(op1), navm.MakeVirtualRegister(op2))
-				operands.Push(vreg.Value())
 			case "/":
-				vreg := ir.NewVirtualRegister()
 				ir.DivRegisters(vreg, navm.MakeVirtualRegister(op1), navm.MakeVirtualRegister(op2))
-				operands.Push(vreg.Value())
 			default:
 				panic("Unknown operator: " + t.value)
 			}
+			operands.Push(vreg.Value())
 		default:
 			panic("Unknown token kind: " + t.kind)
 		}
 	}
+	ir.Return()
 	return ir
 }
 
