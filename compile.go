@@ -19,7 +19,7 @@ const scratch_register_count = 2
    STR X1, [SP, #8]       // Store X1 at SP + 8
    ADD SP, SP, #64        // Free 64 bytes by restoring SP
 */
-// 1. Implement register spilling (on the stack)
+// 1. Make return explicit
 // 2. Get cross-compilation working w/ zig
 
 // Add an initial pass that forces constants certain constants into registers
@@ -86,34 +86,28 @@ func Compile(ir *IR, architecture string) string {
 	//   svc 0
 
 	result := ".global _start\n.align 2\n\n_start:\n"
-	lastRegister := 0
 	for _, instr := range ir.instructions {
 		switch instr.op {
 		case add:
 			result += getInstruction(a, "add", instr, ir)
-			lastRegister = instr.ret.value
 		case sub:
 			result += getInstruction(a, "sub", instr, ir)
-			lastRegister = instr.ret.value
 		case mult:
 			result += getInstruction(a, "mul", instr, ir)
-			lastRegister = instr.ret.value
 		case div:
 			result += getInstruction(a, "sdiv", instr, ir)
-			lastRegister = instr.ret.value
 		case mov:
 			result += getTwoArgInstruction(a, "mov", instr, ir)
-			lastRegister = instr.ret.value
 		case load:
 			result += getTwoArgInstruction(a, "ldr", instr, ir)
-			lastRegister = instr.ret.value
 		case store:
 			result += getTwoArgNoRetInstruction(a, "str", instr, ir)
+		case ret:
+			result += getReturn()
 		default:
 			panic("Unknown operation: " + strconv.Itoa(int(instr.op)))
 		}
 	}
-	result += getFooter(a, lastRegister)
 	return result
 }
 
@@ -169,7 +163,12 @@ func freeStackSpace(a *Architecture, ir *IR, stackMax int) {
 		arg1: GetStackPointer(),
 		arg2: MakeConstant(ir.GetConstant(stackMax * a.IntSize)),
 	}
-	ir.instructions = append(ir.instructions, xrn)
+	finalInstr := ir.instructions[len(ir.instructions)-1]
+	if finalInstr.op == ret {
+		ir.instructions = append(ir.instructions[:len(ir.instructions)-1], xrn, finalInstr)
+	} else {
+		ir.instructions = append(ir.instructions, xrn)
+	}
 }
 
 func addSpillInstructions(a *Architecture, ir *IR) {
@@ -223,16 +222,8 @@ func GetStackAddress(a *Architecture, ir *IR, stackPos int) Arg {
 }
 
 // For now we just assume the last register assigned is the return register
-func getFooter(a *Architecture, lastRegister int) string {
-	str := ""
-	if lastRegister != 0 {
-		str += "  mov " + a.ReturnRegister + ", " + a.GetPhysicalRegister(lastRegister) + "\n"
-	} else {
-		str += "  mov " + a.ReturnRegister + ", #0\n"
-	}
-	str += "  mov X16, #1\n"
-	str += "  svc 0\n"
-	return str
+func getReturn() string {
+	return "  ret\n"
 }
 
 func getTwoArgInstruction(a *Architecture, name string, instr Instruction, ir *IR) string {
@@ -393,6 +384,9 @@ func allocateInstruction(instr Instruction, allocated []allocation) Instruction 
 func allocateArg(arg Arg, allocated []allocation) Arg {
 	if arg.isVirtualRegister && (arg.argType == registerArg || arg.argType == address) {
 		arg.isVirtualRegister = false
+		if arg.value < 0 { // special registers are not allocated
+			return arg
+		}
 		if allocated[arg.value].allocTyp == stackAlloc {
 			arg.argType = stackArg
 		}
@@ -403,6 +397,10 @@ func allocateArg(arg Arg, allocated []allocation) Arg {
 
 func allocateRegister(register Register, allocated []allocation) Register {
 	if register.registerType == virtualRegister {
+		if register.value < 0 { // special registers are not allocated
+			register.registerType = physicalRegister
+			return register
+		}
 		if allocated[register.value].allocTyp == stackAlloc {
 			register.registerType = stackRegister
 		} else {

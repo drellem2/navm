@@ -38,6 +38,9 @@ func (a *Architecture) GetPhysicalRegister(register int) string {
 	if register == STACK_POINTER_REGISTER {
 		return a.StackPointerRegister
 	}
+	if register == RETURN_REGISTER {
+		return a.ReturnRegister
+	}
 	if register < 0 {
 		panic("Invalid register: " + strconv.Itoa(register))
 	}

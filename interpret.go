@@ -1,8 +1,9 @@
 package navm
 
 type Runtime struct {
-	registers []int
-	memory    []byte
+	returnRegister int
+	registers      []int
+	memory         []byte
 }
 
 func validateRegister(r Register) {
@@ -22,39 +23,52 @@ func Interpret(ir *IR) int {
 	r := Runtime{
 		registers: make([]int, ir.registersLength),
 		memory:    make([]byte, 1024)}
-	lastAssignedRegister := 0
 	for _, i := range ir.instructions {
 		(&r).print()
 		switch i.op {
 		case add:
-			lastAssignedRegister = i.ret.value
 			runAdd(i, &r, ir)
 		case sub:
-			lastAssignedRegister = i.ret.value
 			runSub(i, &r, ir)
 		case mult:
-			lastAssignedRegister = i.ret.value
 			runMult(i, &r, ir)
 		case div:
-			lastAssignedRegister = i.ret.value
 			runDiv(i, &r, ir)
 		case mov:
-			lastAssignedRegister = i.ret.value
 			runMov(i, &r, ir)
 		case load:
-			lastAssignedRegister = i.ret.value
 			runLoad(i, &r, ir)
 		case store:
 			runStore(i, &r, ir)
+		case ret:
+			return r.returnRegister
 
 		default:
 			panic("Unknown operation")
 		}
 	}
-	if lastAssignedRegister == 0 {
-		return 0
+	return r.returnRegister
+}
+
+func (r *Runtime) getRegister(i int) int {
+	if i == STACK_POINTER_REGISTER {
+		panic("Stack pointer not implemented in interpreter")
 	}
-	return r.registers[lastAssignedRegister]
+	if i == RETURN_REGISTER {
+		return r.returnRegister
+	}
+	return r.registers[i]
+}
+
+func (r *Runtime) setRegister(i int, value int) {
+	if i == STACK_POINTER_REGISTER {
+		panic("Stack pointer not implemented in interpreter")
+	}
+	if i == RETURN_REGISTER {
+		r.returnRegister = value
+		return
+	}
+	r.registers[i] = value
 }
 
 func runMov(i Instruction, r *Runtime, ir *IR) {
@@ -72,11 +86,11 @@ func runMov(i Instruction, r *Runtime, ir *IR) {
 		if !i.arg2.isVirtualRegister {
 			panic("Physical register not legal when interpreting")
 		}
-		arg2 = r.registers[i.arg2.value]
+		arg2 = r.getRegister(i.arg2.value)
 	default:
 		panic("Unknown argument type")
 	}
-	r.registers[i.ret.value] = arg2
+	r.setRegister(i.ret.value, arg2)
 }
 
 func runAdd(i Instruction, r *Runtime, ir *IR) {
@@ -92,11 +106,11 @@ func runAdd(i Instruction, r *Runtime, ir *IR) {
 		if !i.arg2.isVirtualRegister {
 			panic("Physical register not legal when interpreting")
 		}
-		arg2 = r.registers[i.arg2.value]
+		arg2 = r.getRegister(i.arg2.value)
 	default:
 		panic("Unknown argument type")
 	}
-	r.registers[i.ret.value] = r.registers[i.arg1.value] + arg2
+	r.setRegister(i.ret.value, r.getRegister(i.arg1.value)+arg2)
 }
 
 func runSub(i Instruction, r *Runtime, ir *IR) {
@@ -112,11 +126,11 @@ func runSub(i Instruction, r *Runtime, ir *IR) {
 		if !i.arg2.isVirtualRegister {
 			panic("Physical register not legal when interpreting")
 		}
-		arg2 = r.registers[i.arg2.value]
+		arg2 = r.getRegister(i.arg2.value)
 	default:
 		panic("Unknown argument type")
 	}
-	r.registers[i.ret.value] = r.registers[i.arg1.value] - arg2
+	r.setRegister(i.ret.value, r.getRegister(i.arg1.value)-arg2)
 }
 
 func runMult(i Instruction, r *Runtime, ir *IR) {
@@ -132,11 +146,11 @@ func runMult(i Instruction, r *Runtime, ir *IR) {
 		if !i.arg2.isVirtualRegister {
 			panic("Physical register not legal when interpreting")
 		}
-		arg2 = r.registers[i.arg2.value]
+		arg2 = r.getRegister(i.arg2.value)
 	default:
 		panic("Unknown argument type")
 	}
-	r.registers[i.ret.value] = r.registers[i.arg1.value] * arg2
+	r.setRegister(i.ret.value, r.getRegister(i.arg1.value)*arg2)
 }
 
 func runDiv(i Instruction, r *Runtime, ir *IR) {
@@ -152,11 +166,11 @@ func runDiv(i Instruction, r *Runtime, ir *IR) {
 		if !i.arg2.isVirtualRegister {
 			panic("Physical register not legal when interpreting")
 		}
-		arg2 = r.registers[i.arg2.value]
+		arg2 = r.getRegister(i.arg2.value)
 	default:
 		panic("Unknown argument type")
 	}
-	r.registers[i.ret.value] = r.registers[i.arg1.value] / arg2
+	r.setRegister(i.ret.value, r.getRegister(i.arg1.value)/arg2)
 }
 
 func runLoad(i Instruction, r *Runtime, ir *IR) {
@@ -164,10 +178,10 @@ func runLoad(i Instruction, r *Runtime, ir *IR) {
 	if i.arg2.argType != address {
 		panic("Load arg2 should be an address")
 	}
-	r.registers[i.ret.value] = 0
+	r.setRegister(i.ret.value, 0)
 	for t := 0; t < 8; t++ {
-		r.registers[i.ret.value] = r.registers[i.ret.value] << 8
-		r.registers[i.ret.value] = r.registers[i.ret.value] | int(r.memory[r.registers[i.arg2.value]+ir.constants[i.arg2.offsetConstant]+t])
+		r.setRegister(i.ret.value, r.getRegister(i.ret.value)<<8)
+		r.setRegister(i.ret.value, r.getRegister(i.ret.value)|int(r.memory[r.getRegister(i.arg2.value)+ir.constants[i.arg2.offsetConstant]+t]))
 	}
 }
 
@@ -179,7 +193,7 @@ func runStore(i Instruction, r *Runtime, ir *IR) {
 	}
 	// Now we do the opposite and store 8 bytes
 	for t := 0; t < 8; t++ {
-		r.memory[r.registers[i.arg2.value]+ir.constants[i.arg2.offsetConstant]+t] = byte(r.registers[i.arg1.value] >> uint(8*(7-t)))
+		r.memory[r.getRegister(i.arg2.value)+ir.constants[i.arg2.offsetConstant]+t] = byte(r.getRegister(i.arg1.value) >> uint(8*(7-t)))
 	}
 }
 

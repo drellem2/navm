@@ -117,15 +117,15 @@ func makeIntervals(ir *IR) []Interval {
 	for i, instr := range ir.instructions {
 		// Get all virtual registers used in this instruction
 		// and update their intervals
-		if instr.arg1.registerType == virtualRegister {
+		if instr.arg1.registerType == virtualRegister && instr.arg1.value >= 0 {
 			intervals[instr.arg1.value].start = min(intervals[instr.arg1.value].start, i)
 			intervals[instr.arg1.value].end = i + 1
 		}
-		if instr.ret.registerType == virtualRegister {
+		if instr.ret.registerType == virtualRegister && instr.ret.value >= 0 {
 			intervals[instr.ret.value].start = min(intervals[instr.ret.value].start, i)
 			intervals[instr.ret.value].end = i + 1
 		}
-		if instr.arg2.isVirtualRegister && (instr.arg2.argType == registerArg || instr.arg2.argType == address) {
+		if instr.arg2.isVirtualRegister && (instr.arg2.argType == registerArg || instr.arg2.argType == address) && instr.arg2.value >= 0 {
 			intervals[instr.arg2.value].start = min(intervals[instr.arg2.value].start, i)
 			intervals[instr.arg2.value].end = i + 1
 		}

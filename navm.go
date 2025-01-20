@@ -22,6 +22,7 @@ const (
 	div   Op = iota
 	load  Op = iota
 	store Op = iota
+	ret   Op = iota
 )
 
 // Add concept of virtual vs physical registers
@@ -45,6 +46,7 @@ func (r Register) Value() int {
 }
 
 const STACK_POINTER_REGISTER = -1
+const RETURN_REGISTER = -2
 
 // 0 register is not used, will indicate "no register"
 // 1 register will indicate the return value
@@ -147,6 +149,11 @@ func (ir *IR) Store(reg Register, addr Arg) {
 	ir.instructions = append(ir.instructions, xrn)
 }
 
+func (ir *IR) Return() {
+	xrn := Instruction{op: ret}
+	ir.instructions = append(ir.instructions, xrn)
+}
+
 func (ir *IR) AddInstruction(xrn Instruction) {
 	ir.instructions = append(ir.instructions, xrn)
 }
@@ -167,6 +174,10 @@ func MakePhysicalRegister(value int) Register {
 
 func GetStackPointer() Register {
 	return Register{registerType: physicalRegister, value: STACK_POINTER_REGISTER}
+}
+
+func GetReturnRegister() Register {
+	return Register{registerType: virtualRegister, value: RETURN_REGISTER}
 }
 
 func (r Register) ToArg() Arg {

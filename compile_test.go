@@ -373,9 +373,10 @@ func TestSpill(t *testing.T) {
 		MakeVirtualRegister(7),
 		MakeVirtualRegister(2))
 	ir.AddRegisters(
-		MakeVirtualRegister(3),
+		GetReturnRegister(),
 		MakeVirtualRegister(8),
 		MakeVirtualRegister(4))
+	ir.Return()
 	ir.registersLength = 10
 	ir.constants = []int{1}
 	result2 := Interpret(ir)

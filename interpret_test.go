@@ -13,8 +13,8 @@ func TestAddConstants(t *testing.T) {
 		instructions: []Instruction{
 			Instruction{
 				op:   add,
-				ret:  MakeVirtualRegister(1),
-				arg1: MakeVirtualRegister(1),
+				ret:  GetReturnRegister(),
+				arg1: GetReturnRegister(),
 				arg2: Arg{
 					argType: constant,
 					value:   1,
@@ -44,7 +44,7 @@ func TestAddRegisters(t *testing.T) {
 			},
 			Instruction{
 				op:   add,
-				ret:  MakeVirtualRegister(1),
+				ret:  GetReturnRegister(),
 				arg1: MakeVirtualRegister(2),
 				arg2: Arg{
 					argType: constant,
@@ -83,7 +83,7 @@ func TestMove(t *testing.T) {
 			},
 			Instruction{
 				op:  mov,
-				ret: MakeVirtualRegister(1),
+				ret: GetReturnRegister(),
 				arg2: Arg{
 					argType:           registerArg,
 					isVirtualRegister: true,
@@ -113,7 +113,7 @@ func TestSubRegisters(t *testing.T) {
 			},
 			Instruction{
 				op:   sub,
-				ret:  MakeVirtualRegister(1),
+				ret:  GetReturnRegister(),
 				arg1: MakeVirtualRegister(2),
 				arg2: Arg{
 					argType: constant,
@@ -143,7 +143,7 @@ func TestMultRegisters(t *testing.T) {
 			},
 			Instruction{
 				op:   mult,
-				ret:  MakeVirtualRegister(1),
+				ret:  GetReturnRegister(),
 				arg1: MakeVirtualRegister(2),
 				arg2: Arg{
 					argType: constant,
@@ -173,7 +173,7 @@ func TestDivRegisters(t *testing.T) {
 			},
 			Instruction{
 				op:   div,
-				ret:  MakeVirtualRegister(1),
+				ret:  GetReturnRegister(),
 				arg1: MakeVirtualRegister(2),
 				arg2: Arg{
 					argType: constant,
@@ -212,7 +212,7 @@ func TestLoadAndStore(t *testing.T) {
 			},
 			Instruction{
 				op:  load,
-				ret: MakeVirtualRegister(1),
+				ret: GetReturnRegister(),
 				arg2: Arg{
 					argType:        address,
 					value:          2,
