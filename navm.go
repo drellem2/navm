@@ -43,6 +43,8 @@ func (r Register) Value() int {
 	return r.value
 }
 
+const STACK_POINTER_REGISTER = -1
+
 // 0 register is not used, will indicate "no register"
 // 1 register will indicate the return value
 
@@ -155,6 +157,10 @@ func (ir *IR) NewVirtualRegister() Register {
 
 func MakeVirtualRegister(value int) Register {
 	return Register{registerType: virtualRegister, value: value}
+}
+
+func GetStackPointer() Register {
+	return Register{registerType: physicalRegister, value: STACK_POINTER_REGISTER}
 }
 
 func (ir *IR) Print() string {

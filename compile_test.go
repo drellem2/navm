@@ -81,7 +81,7 @@ func TestAllocateRegisters(t *testing.T) {
 		},
 		constants: []int{1, 2},
 	}
-	allocateRegisters(&ir)
+	allocateRegisters(Architectures[AARCH64_MACOS_NONE], &ir)
 	// Print instructions
 	for _, i := range ir.instructions {
 		t.Logf(i.Print())
@@ -143,7 +143,7 @@ func TestAdd(t *testing.T) {
 		constants: []int{1, 2},
 	}
 
-	result := Compile(&ir)
+	result := Compile(&ir, AARCH64_MACOS_NONE)
 	if result == "" {
 		t.Errorf("Expected non-empty string, got %s", result)
 	}
@@ -183,7 +183,7 @@ func TestMov(t *testing.T) {
 		constants: []int{1, 2},
 	}
 
-	result := Compile(&ir)
+	result := Compile(&ir, AARCH64_MACOS_NONE)
 	if result == "" {
 		t.Errorf("Expected non-empty string, got %s", result)
 	}
@@ -213,7 +213,7 @@ func TestSub(t *testing.T) {
 		},
 		constants: []int{1, 2},
 	}
-	result := Compile(&ir)
+	result := Compile(&ir, AARCH64_MACOS_NONE)
 	if result == "" {
 		t.Errorf("Expected non-empty string, got %s", result)
 	}
@@ -243,7 +243,7 @@ func TestMult(t *testing.T) {
 		},
 		constants: []int{3, 2},
 	}
-	result := Compile(&ir)
+	result := Compile(&ir, AARCH64_MACOS_NONE)
 	if result == "" {
 		t.Errorf("Expected non-empty string, got %s", result)
 	}
@@ -273,7 +273,7 @@ func TestDiv(t *testing.T) {
 		},
 		constants: []int{2, 4},
 	}
-	result := Compile(&ir)
+	result := Compile(&ir, AARCH64_MACOS_NONE)
 	if result == "" {
 		t.Errorf("Expected non-empty string, got %s", result)
 	}
@@ -312,7 +312,7 @@ func TestLoadAndStoreCompile(t *testing.T) {
 		},
 		constants: []int{2, 1},
 	}
-	result := Compile(&ir)
+	result := Compile(&ir, AARCH64_MACOS_NONE)
 	if result != "" {
 		t.Errorf("Unexpected empty string, got %s", result)
 	}

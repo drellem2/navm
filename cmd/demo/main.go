@@ -158,7 +158,7 @@ func interpret(expr string) int {
 
 func compile(expr string) string {
 	ir := toIR(expr)
-	return navm.Compile(ir)
+	return navm.Compile(ir, navm.AARCH64_MACOS_NONE)
 }
 
 // parse cli args
@@ -170,7 +170,7 @@ func main() {
 	switch args[1] {
 	case "compile":
 		ir := toIR(args[2])
-		result := navm.Compile(ir)
+		result := navm.Compile(ir, navm.AARCH64_MACOS_NONE)
 		println(result)
 	case "interpret":
 		ir := toIR(args[2])

@@ -9,6 +9,8 @@ import (
 // TODO: In priority order
 // 0. Add stack manipulation commands and test add to load/store test
 //    so it won't segfault
+
+// 1. Add sp register
 /*
    // Example:
    SUB SP, SP, #64        // Reserve 64 bytes on the stack
@@ -18,8 +20,6 @@ import (
 */
 // 1. Implement register spilling (on the stack)
 // 2. Get cross-compilation working w/ zig
-var aarchMac64Registers = []string{"X9", "X10", "X11", "X12", "X13", "X14", "X15"}
-var aarchMacReturnRegister = "X0"
 
 // Add an initial pass that forces constants certain constants into registers
 // e.g. in arm, both mul operands must be in registers
@@ -55,9 +55,13 @@ func placeConstantsInRegisters(ir *IR) {
 	ir.instructions = xns
 }
 
-func Compile(ir *IR) string {
+func Compile(ir *IR, architecture string) string {
+	a := Architectures[architecture]
+	if a == nil {
+		panic("Unknown or unsupported architecture: " + architecture)
+	}
 	placeConstantsInRegisters(ir)
-	allocateRegisters(ir)
+	allocateRegisters(a, ir)
 
 	// Now do really simple code generation
 	// Example:
@@ -75,66 +79,66 @@ func Compile(ir *IR) string {
 	for _, instr := range ir.instructions {
 		switch instr.op {
 		case add:
-			result += getInstruction("add", instr, ir)
+			result += getInstruction(a, "add", instr, ir)
 			lastRegister = instr.ret.value
 		case sub:
-			result += getInstruction("sub", instr, ir)
+			result += getInstruction(a, "sub", instr, ir)
 			lastRegister = instr.ret.value
 		case mult:
-			result += getInstruction("mul", instr, ir)
+			result += getInstruction(a, "mul", instr, ir)
 			lastRegister = instr.ret.value
 		case div:
-			result += getInstruction("sdiv", instr, ir)
+			result += getInstruction(a, "sdiv", instr, ir)
 			lastRegister = instr.ret.value
 		case mov:
-			result += getTwoArgInstruction("mov", instr, ir)
+			result += getTwoArgInstruction(a, "mov", instr, ir)
 			lastRegister = instr.ret.value
 		case load:
-			result += getTwoArgInstruction("ldr", instr, ir)
+			result += getTwoArgInstruction(a, "ldr", instr, ir)
 			lastRegister = instr.ret.value
 		case store:
-			result += getTwoArgNoRetInstruction("str", instr, ir)
+			result += getTwoArgNoRetInstruction(a, "str", instr, ir)
 		default:
 			panic("Unknown operation: " + strconv.Itoa(int(instr.op)))
 		}
 	}
-	result += getFooter(lastRegister)
+	result += getFooter(a, lastRegister)
 	return result
 }
 
 // For now we just assume the last register assigned is the return register
-func getFooter(lastRegister int) string {
+func getFooter(a *Architecture, lastRegister int) string {
 	str := ""
 	if lastRegister != 0 {
-		str += "  mov " + aarchMacReturnRegister + ", " + getPhysicalRegister(lastRegister) + "\n"
+		str += "  mov " + a.ReturnRegister + ", " + a.GetPhysicalRegister(lastRegister) + "\n"
 	} else {
-		str += "  mov " + aarchMacReturnRegister + ", #0\n"
+		str += "  mov " + a.ReturnRegister + ", #0\n"
 	}
 	str += "  mov X16, #1\n"
 	str += "  svc 0\n"
 	return str
 }
 
-func getTwoArgInstruction(name string, instr Instruction, ir *IR) string {
-	retRegister := getPhysicalRegister(instr.ret.value)
-	arg2 := getArg(instr.arg2, ir)
+func getTwoArgInstruction(a *Architecture, name string, instr Instruction, ir *IR) string {
+	retRegister := a.GetPhysicalRegister(instr.ret.value)
+	arg2 := getArg(a, instr.arg2, ir)
 	return "  " + name + " " + retRegister + ", " + arg2 + "\n"
 }
 
-func getTwoArgNoRetInstruction(name string, instr Instruction, ir *IR) string {
-	arg1Register := getPhysicalRegister(instr.arg1.value)
-	arg2 := getArg(instr.arg2, ir)
+func getTwoArgNoRetInstruction(a *Architecture, name string, instr Instruction, ir *IR) string {
+	arg1Register := a.GetPhysicalRegister(instr.arg1.value)
+	arg2 := getArg(a, instr.arg2, ir)
 	return "  " + name + " " + arg1Register + ", " + arg2 + "\n"
 }
 
-func getInstruction(name string, instr Instruction, ir *IR) string {
-	retRegister := getPhysicalRegister(instr.ret.value)
-	arg1 := getPhysicalRegister(instr.arg1.value)
-	arg2 := getArg(instr.arg2, ir)
+func getInstruction(a *Architecture, name string, instr Instruction, ir *IR) string {
+	retRegister := a.GetPhysicalRegister(instr.ret.value)
+	arg1 := a.GetPhysicalRegister(instr.arg1.value)
+	arg2 := getArg(a, instr.arg2, ir)
 	return "  " + name + " " + retRegister + ", " + arg1 + ", " + arg2 + "\n"
 }
 
-func getArg(arg Arg, ir *IR) string {
+func getArg(a *Architecture, arg Arg, ir *IR) string {
 	switch arg.argType {
 	case constant:
 		return getConstant(arg.value, ir)
@@ -142,30 +146,23 @@ func getArg(arg Arg, ir *IR) string {
 		if arg.isVirtualRegister {
 			panic("Virtual register not allowed at code generation time")
 		}
-		return getPhysicalRegister(arg.value)
+		return a.GetPhysicalRegister(arg.value)
 	case address:
-		return getAddress(arg, ir)
+		return getAddress(a, arg, ir)
 	default:
 		panic("Unknown argument type")
 	}
 }
 
-func getAddress(arg Arg, ir *IR) string {
-	return "[" + getPhysicalRegister(arg.value) + ", #" + strconv.Itoa(ir.constants[arg.offsetConstant]) + "]"
+func getAddress(a *Architecture, arg Arg, ir *IR) string {
+	return "[" + a.GetPhysicalRegister(arg.value) + ", #" + strconv.Itoa(ir.constants[arg.offsetConstant]) + "]"
 }
 
 func getConstant(i int, ir *IR) string {
 	return "#" + strconv.Itoa(ir.constants[i])
 }
 
-func getPhysicalRegister(i int) string {
-	if i == 0 {
-		panic("0 register should never be used")
-	}
-	return aarchMac64Registers[i-1]
-}
-
-func allocateRegisters(ir *IR) {
+func allocateRegisters(a *Architecture, ir *IR) {
 	// Build liveness intervals
 	// Perform linear scan register allocation
 
@@ -178,7 +175,7 @@ func allocateRegisters(ir *IR) {
 
 	// Free physical registers are just a simple queue, not a priority queue
 	physicalRegisters := q.Queue{}
-	for i := 0; i < len(aarchMac64Registers); i++ {
+	for i := 0; i < len(a.Registers64); i++ {
 		physicalRegisters.Push(i + 1)
 	}
 
