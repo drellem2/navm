@@ -5,8 +5,13 @@ import (
 )
 
 // Liveness interval, half open [start, end)
+// Can be in one of 3 states:
+// 1. virtual register (not yet allocated)
+// 2. physical register (allocated)
+// 3. Stack position (spilled)
 type Interval struct {
 	physicalRegister int
+	stackPosition    int
 	register         Register
 	start            int
 	end              int
@@ -28,7 +33,7 @@ func (q *LivenessQueue) Push(i Interval) {
 		q.intervals = append(q.intervals, i)
 		return
 	}
-	if q.active {
+	if !q.active {
 		for j, v := range q.intervals {
 			if v.start > i.start {
 				q.intervals = append(q.intervals[:j], append([]Interval{i}, q.intervals[j:]...)...)

@@ -9,7 +9,7 @@ func init() {
 
 func TestPopLast(t *testing.T) {
 	q := LivenessQueue{}
-	q.active = true
+	q.active = false
 	q.Push(Interval{start: 0, end: 1})
 	q.Push(Interval{start: 1, end: 2})
 	q.Push(Interval{start: 2, end: 3})
@@ -30,9 +30,9 @@ func TestPopLast(t *testing.T) {
 	}
 }
 
-func TestLivenessQueueActiveStartsWithSmall(t *testing.T) {
+func TestLivenessQueueInactiveStartsWithSmall(t *testing.T) {
 	q := LivenessQueue{}
-	q.active = true
+	q.active = false
 	q.Push(Interval{start: 0, end: 1})
 	q.Push(Interval{start: 3, end: 4})
 	q.Push(Interval{start: 1, end: 2})
@@ -58,10 +58,10 @@ func TestLivenessQueueActiveStartsWithSmall(t *testing.T) {
 	}
 }
 
-func TestLivenessQueueActive(t *testing.T) {
+func TestLivenessQueueInactive(t *testing.T) {
 	// Push a few values and check that they are sorted
 	q := LivenessQueue{}
-	q.active = true
+	q.active = false
 	q.Push(Interval{start: 3, end: 4})
 	q.Push(Interval{start: 1, end: 2})
 	q.Push(Interval{start: 2, end: 3})
@@ -111,10 +111,10 @@ func TestLivenessQueueActive(t *testing.T) {
 	}
 }
 
-func TestLivenessQueueInactive(t *testing.T) {
+func TestLivenessQueueActive(t *testing.T) {
 	// Push a few values and check that they are sorted
 	q := LivenessQueue{}
-	q.active = false
+	q.active = true
 	q.Push(Interval{start: 3, end: 4})
 	q.Push(Interval{start: 1, end: 2})
 	q.Push(Interval{start: 2, end: 3})

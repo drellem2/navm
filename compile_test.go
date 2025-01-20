@@ -336,3 +336,52 @@ func TestLoadAndStoreCompile(t *testing.T) {
 		t.Errorf("Unexpected empty string, got %s", result)
 	}
 }
+
+func TestSpill(t *testing.T) {
+	ir := NewIR()
+	ir.MoveConstant(MakeVirtualRegister(1), 0)
+	ir.AddRegisters(
+		MakeVirtualRegister(2),
+		MakeVirtualRegister(1),
+		MakeVirtualRegister(1))
+	ir.AddRegisters(
+		MakeVirtualRegister(3),
+		MakeVirtualRegister(2),
+		MakeVirtualRegister(2))
+	ir.AddRegisters(
+		MakeVirtualRegister(4),
+		MakeVirtualRegister(3),
+		MakeVirtualRegister(3))
+	ir.AddRegisters(
+		MakeVirtualRegister(5),
+		MakeVirtualRegister(4),
+		MakeVirtualRegister(4))
+	ir.AddRegisters(
+		MakeVirtualRegister(6),
+		MakeVirtualRegister(5),
+		MakeVirtualRegister(5))
+	ir.AddRegisters(
+		MakeVirtualRegister(7),
+		MakeVirtualRegister(6),
+		MakeVirtualRegister(6))
+	ir.AddRegisters(
+		MakeVirtualRegister(8),
+		MakeVirtualRegister(7),
+		MakeVirtualRegister(1))
+	ir.AddRegisters(
+		MakeVirtualRegister(9),
+		MakeVirtualRegister(7),
+		MakeVirtualRegister(2))
+	ir.AddRegisters(
+		MakeVirtualRegister(3),
+		MakeVirtualRegister(8),
+		MakeVirtualRegister(4))
+	ir.registersLength = 10
+	ir.constants = []int{1}
+	result2 := Interpret(ir)
+	result := Compile(ir, AARCH64_MACOS_NONE)
+	println("Interpreted result is: ", result2)
+	if result != "" {
+		t.Errorf("Unexpected empty string, got %s", result)
+	}
+}

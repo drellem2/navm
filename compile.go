@@ -6,10 +6,11 @@ import (
 	q "github.com/drellem2/navm/internal/queue"
 )
 
-// TODO: In priority order
-// 0. Add stack manipulation commands and test add to load/store test
-//    so it won't segfault
+const scratch_register_1 = 1
+const scratch_register_2 = 2
+const scratch_register_count = 2
 
+// TODO: In priority order
 // 1. Add sp register
 /*
    // Example:
@@ -63,6 +64,16 @@ func Compile(ir *IR, architecture string) string {
 	placeConstantsInRegisters(ir)
 	allocateRegisters(a, ir)
 
+	// Now we need to deal with any spilled registers
+	// 1. Allocate enough space on the stack for all spilled registers, respecting alignment
+	// 1.1 Ensure that there is one additional stack location for swapping?
+	// 2. Add instructions to spill registers
+	// 3. Add instructions to free the stack
+
+	stackMax := makeStackSpace(a, ir)
+	addSpillInstructions(a, ir)
+	freeStackSpace(a, ir, stackMax)
+
 	// Now do really simple code generation
 	// Example:
 	// .global _start
@@ -104,6 +115,111 @@ func Compile(ir *IR, architecture string) string {
 	}
 	result += getFooter(a, lastRegister)
 	return result
+}
+
+func makeStackSpace(a *Architecture, ir *IR) int {
+	// Get largest stack position
+	var stackMax int
+	for _, instr := range ir.instructions {
+		if instr.arg2.argType == stackArg {
+			if instr.arg2.value > stackMax {
+				stackMax = instr.arg2.value
+			}
+		}
+		if instr.ret.registerType == stackRegister {
+			if instr.ret.value > stackMax {
+				stackMax = instr.ret.value
+			}
+		}
+		if instr.arg1.registerType == stackRegister {
+			if instr.arg1.value > stackMax {
+				stackMax = instr.arg1.value
+			}
+		}
+	}
+	if stackMax == 0 {
+		return 0
+	}
+	stackMaxSize := stackMax * a.IntSize
+	alignRemainder := stackMaxSize % a.StackAlignmentSize
+	if alignRemainder != 0 {
+		stackMaxSize += a.StackAlignmentSize - alignRemainder
+	}
+	if stackMaxSize%a.IntSize != 0 {
+		panic("Stack size not a multiple of int size")
+	}
+	stackMax = stackMaxSize / a.IntSize
+	xrn := Instruction{
+		op:   sub,
+		ret:  GetStackPointer(),
+		arg1: GetStackPointer(),
+		arg2: MakeConstant(ir.GetConstant(stackMax * a.IntSize)),
+	}
+	ir.instructions = append([]Instruction{xrn}, ir.instructions...)
+	return stackMax
+}
+
+func freeStackSpace(a *Architecture, ir *IR, stackMax int) {
+	if stackMax == 0 {
+		return
+	}
+	xrn := Instruction{
+		op:   add,
+		ret:  GetStackPointer(),
+		arg1: GetStackPointer(),
+		arg2: MakeConstant(ir.GetConstant(stackMax * a.IntSize)),
+	}
+	ir.instructions = append(ir.instructions, xrn)
+}
+
+func addSpillInstructions(a *Architecture, ir *IR) {
+	xns := make([]Instruction, 0)
+	for _, instr := range ir.instructions {
+		println("Processing instruction: ", instr.Print())
+		if instr.arg1.registerType == stackRegister {
+			tmpReg1 := MakePhysicalRegister(scratch_register_1)
+			loadXrn := Instruction{
+				op:   load,
+				ret:  tmpReg1,
+				arg2: GetStackAddress(a, ir, instr.arg1.value),
+			}
+			xns = append(xns, loadXrn)
+			instr.arg1 = tmpReg1
+		}
+		if instr.arg2.argType == stackArg {
+			tmpReg2 := MakePhysicalRegister(scratch_register_2)
+			loadXrn := Instruction{
+				op:   load,
+				ret:  tmpReg2,
+				arg2: GetStackAddress(a, ir, instr.arg2.value),
+			}
+			xns = append(xns, loadXrn)
+			instr.arg2 = tmpReg2.ToArg()
+		}
+		var storeNeeded bool
+		var storeStackPos Arg
+		if instr.ret.registerType == stackRegister {
+			storeStackPos = GetStackAddress(a, ir, instr.ret.value)
+			instr.ret = MakePhysicalRegister(scratch_register_1)
+			storeNeeded = true
+		}
+		xns = append(xns, instr)
+		if storeNeeded {
+			storeXrn := Instruction{
+				op:   store,
+				arg1: MakePhysicalRegister(scratch_register_1),
+				arg2: storeStackPos,
+			}
+			println("Created store xrn ", storeXrn.Print())
+			xns = append(xns, storeXrn)
+		}
+	}
+	ir.instructions = xns
+}
+
+// Converts our virtual stack pointer into a real address
+func GetStackAddress(a *Architecture, ir *IR, stackPos int) Arg {
+	return GetStackPointer().ToAddress(ir.GetConstant((stackPos - 1) * a.IntSize))
 }
 
 // For now we just assume the last register assigned is the return register
@@ -162,6 +278,27 @@ func getConstant(i int, ir *IR) string {
 	return "#" + strconv.Itoa(ir.constants[i])
 }
 
+type allocType int
+
+const (
+	noAllocType   allocType = iota
+	registerAlloc allocType = iota
+	stackAlloc    allocType = iota
+)
+
+type allocation struct {
+	allocTyp allocType
+	value    int
+}
+
+func makeRegisterAlloc(value int) allocation {
+	return allocation{registerAlloc, value}
+}
+
+func makeStackAlloc(value int) allocation {
+	return allocation{stackAlloc, value}
+}
+
 func allocateRegisters(a *Architecture, ir *IR) {
 	// Build liveness intervals
 	// Perform linear scan register allocation
@@ -170,12 +307,16 @@ func allocateRegisters(a *Architecture, ir *IR) {
 	inactiveQueue := LivenessQueue{active: false}
 	finishedQueue := LivenessQueue{active: true}
 
+	var virtualStackPointer int
+
 	// maps vregisters to physical registers
-	allocated := make([]int, ir.registersLength)
+	allocated := make([]allocation, ir.registersLength)
 
 	// Free physical registers are just a simple queue, not a priority queue
 	physicalRegisters := q.Queue{}
-	for i := 0; i < len(a.Registers64); i++ {
+	// We skip the first two registers so we can use them later as scratch registers
+	// when restoring spills
+	for i := scratch_register_count; i < len(a.Registers64); i++ {
 		physicalRegisters.Push(i + 1)
 	}
 
@@ -189,25 +330,35 @@ func allocateRegisters(a *Architecture, ir *IR) {
 
 	// Linear scan, we iterate through inactive queue and try to assign
 	// registers
-
 	for !inactiveQueue.Empty() {
 		interval := inactiveQueue.Pop()
 		// Check if we can assign a register
 		if physicalRegisters.Empty() {
 			// Spill register
-			panic("Too many virtual registers - spilling not implemented")
-		}
+			// panic("Too many virtual registers - spilling not implemented")
+			// Here we will choose the active range ending last and spill its register
+			// TODO - do comparison against current interval and decide if we need to spill
+			spill := activeQueue.PopLast()
+			physReg := spill.physicalRegister
+			spill.physicalRegister = 0
+			virtualStackPointer = virtualStackPointer + 1
+			spill.stackPosition = virtualStackPointer
+			finishedQueue.Push(spill)
 
-		// Free all registers that are not live anymore
-		for !activeQueue.Empty() && activeQueue.Peek().end <= interval.start {
-			finished := activeQueue.Pop()
-			finishedQueue.Push(finished)
-			physicalRegisters.Push(finished.physicalRegister)
-		}
+			interval.physicalRegister = physReg
+			activeQueue.Push(interval)
+		} else {
+			// Free all registers that are not live anymore
+			for !activeQueue.Empty() && activeQueue.Peek().end <= interval.start {
+				finished := activeQueue.Pop()
+				finishedQueue.Push(finished)
+				physicalRegisters.Push(finished.physicalRegister)
+			}
 
-		// assign a register
-		interval.physicalRegister = physicalRegisters.Pop()
-		activeQueue.Push(interval)
+			// assign a register
+			interval.physicalRegister = physicalRegisters.Pop()
+			activeQueue.Push(interval)
+		}
 	}
 
 	// Add remaining active intervals to finished queue
@@ -218,23 +369,46 @@ func allocateRegisters(a *Architecture, ir *IR) {
 	// Iterate over finished
 	for !finishedQueue.Empty() {
 		finished := finishedQueue.Pop()
-		allocated[finished.register.value] = finished.physicalRegister
+		if finished.stackPosition != 0 {
+			allocated[finished.register.value] = makeStackAlloc(finished.stackPosition)
+		} else {
+			println("Trying to allocate register ", finished.register.value, " length is ", len(allocated))
+			allocated[finished.register.value] = makeRegisterAlloc(finished.physicalRegister)
+		}
 	}
 
 	// Now iterate through instructions and set all virtual registers to physical registers
 	for i, instr := range ir.instructions {
-		if instr.arg1.registerType == virtualRegister {
-			instr.arg1.registerType = physicalRegister
-			instr.arg1.value = allocated[instr.arg1.value]
-		}
-		if instr.ret.registerType == virtualRegister {
-			instr.ret.registerType = physicalRegister
-			instr.ret.value = allocated[instr.ret.value]
-		}
-		if instr.arg2.isVirtualRegister && (instr.arg2.argType == registerArg || instr.arg2.argType == address) {
-			instr.arg2.isVirtualRegister = false
-			instr.arg2.value = allocated[instr.arg2.value]
-		}
-		ir.instructions[i] = instr
+		ir.instructions[i] = allocateInstruction(instr, allocated)
 	}
+}
+
+func allocateInstruction(instr Instruction, allocated []allocation) Instruction {
+	instr.ret = allocateRegister(instr.ret, allocated)
+	instr.arg1 = allocateRegister(instr.arg1, allocated)
+	instr.arg2 = allocateArg(instr.arg2, allocated)
+	return instr
+}
+
+func allocateArg(arg Arg, allocated []allocation) Arg {
+	if arg.isVirtualRegister && (arg.argType == registerArg || arg.argType == address) {
+		arg.isVirtualRegister = false
+		if allocated[arg.value].allocTyp == stackAlloc {
+			arg.argType = stackArg
+		}
+		arg.value = allocated[arg.value].value
+	}
+	return arg
+}
+
+func allocateRegister(register Register, allocated []allocation) Register {
+	if register.registerType == virtualRegister {
+		if allocated[register.value].allocTyp == stackAlloc {
+			register.registerType = stackRegister
+		} else {
+			register.registerType = physicalRegister
+		}
+		register.value = allocated[register.value].value
+	}
+	return register
 }

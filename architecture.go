@@ -10,6 +10,8 @@ type Architecture struct {
 	Registers64          []string
 	ReturnRegister       string
 	StackPointerRegister string
+	IntSize              int
+	StackAlignmentSize   int
 }
 
 var Architectures = map[string]*Architecture{
@@ -24,6 +26,8 @@ func MakeAarch64MacArchitecture() *Architecture {
 		Registers64:          aarchMac64Registers,
 		ReturnRegister:       aarchMacReturnRegister,
 		StackPointerRegister: "SP",
+		IntSize:              8,
+		StackAlignmentSize:   16,
 	}
 }
 

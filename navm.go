@@ -32,6 +32,7 @@ const (
 	noRegisterType   RegisterType = iota
 	virtualRegister  RegisterType = iota
 	physicalRegister RegisterType = iota
+	stackRegister    RegisterType = iota // spilled
 )
 
 type Register struct {
@@ -55,6 +56,7 @@ const (
 	registerArg ArgType = iota
 	constant    ArgType = iota
 	address     ArgType = iota
+	stackArg    ArgType = iota
 )
 
 // Basically a union
@@ -159,6 +161,10 @@ func MakeVirtualRegister(value int) Register {
 	return Register{registerType: virtualRegister, value: value}
 }
 
+func MakePhysicalRegister(value int) Register {
+	return Register{registerType: physicalRegister, value: value}
+}
+
 func GetStackPointer() Register {
 	return Register{registerType: physicalRegister, value: STACK_POINTER_REGISTER}
 }
@@ -169,6 +175,10 @@ func (r Register) ToArg() Arg {
 
 func (r Register) ToAddress(offset int) Arg {
 	return Arg{argType: address, isVirtualRegister: r.registerType == virtualRegister, value: r.value, offsetConstant: offset}
+}
+
+func MakeConstant(value int) Arg {
+	return Arg{argType: constant, value: value}
 }
 
 func (ir *IR) Print() string {
