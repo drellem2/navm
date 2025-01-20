@@ -11,16 +11,7 @@ const scratch_register_2 = 2
 const scratch_register_count = 2
 
 // TODO: In priority order
-// 1. Add sp register
-/*
-   // Example:
-   SUB SP, SP, #16        // Reserve 64 bytes on the stack
-   STR X0, [SP]           // Store X0 at the top of the stack
-   STR X1, [SP, #8]       // Store X1 at SP + 8
-   ADD SP, SP, #64        // Free 64 bytes by restoring SP
-*/
-// 1. Make return explicit
-// 2. Get cross-compilation working w/ zig
+// 1. Get cross-compilation working w/ zig
 
 // Add an initial pass that forces constants certain constants into registers
 // e.g. in arm, both mul operands must be in registers
