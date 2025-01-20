@@ -155,8 +155,6 @@ func freeStackSpace(a *Architecture, ir *IR, stackMax int) {
 	finalInstr := ir.instructions[len(ir.instructions)-1]
 	if finalInstr.op == ret {
 		ir.instructions = append(ir.instructions[:len(ir.instructions)-1], xrn, finalInstr)
-		println("Found a ret, new instr ends with ", finalInstr.Print())
-		println("Now ends with ", ir.instructions[len(ir.instructions)-1].Print())
 	} else {
 		ir.instructions = append(ir.instructions, xrn)
 	}
@@ -165,7 +163,6 @@ func freeStackSpace(a *Architecture, ir *IR, stackMax int) {
 func addSpillInstructions(a *Architecture, ir *IR) {
 	xns := make([]Instruction, 0)
 	for _, instr := range ir.instructions {
-		println("Processing instruction: ", instr.Print())
 		if instr.arg1.registerType == stackRegister {
 			tmpReg1 := MakePhysicalRegister(scratch_register_1)
 			loadXrn := Instruction{
@@ -200,7 +197,6 @@ func addSpillInstructions(a *Architecture, ir *IR) {
 				arg1: MakePhysicalRegister(scratch_register_1),
 				arg2: storeStackPos,
 			}
-			println("Created store xrn ", storeXrn.Print())
 			xns = append(xns, storeXrn)
 		}
 	}
@@ -214,7 +210,6 @@ func GetStackAddress(a *Architecture, ir *IR, stackPos int) Arg {
 
 // For now we just assume the last register assigned is the return register
 func getReturn() string {
-	println("Adding return")
 	return "  ret\n"
 }
 
@@ -355,7 +350,6 @@ func allocateRegisters(a *Architecture, ir *IR) {
 		if finished.stackPosition != 0 {
 			allocated[finished.register.value] = makeStackAlloc(finished.stackPosition)
 		} else {
-			println("Trying to allocate register ", finished.register.value, " length is ", len(allocated))
 			allocated[finished.register.value] = makeRegisterAlloc(finished.physicalRegister)
 		}
 	}
