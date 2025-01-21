@@ -12,7 +12,7 @@ const scratch_register_count = 2
 
 // TODO: In priority order
 // 0. win x86_64 backend
-// 1. Get cross-compilation working w/ zig
+// 1. check cross-compilation with zig cc
 
 // Add an initial pass that forces constants certain constants into registers
 // e.g. in arm, both mul operands must be in registers
