@@ -11,6 +11,7 @@ const scratch_register_2 = 2
 const scratch_register_count = 2
 
 // TODO: In priority order
+// 0. win x86_64 backend
 // 1. Get cross-compilation working w/ zig
 
 // Add an initial pass that forces constants certain constants into registers
@@ -65,7 +66,7 @@ func Compile(ir *IR, architecture string) string {
 	addSpillInstructions(a, ir)
 	freeStackSpace(a, ir, stackMax)
 
-	result := ".global _start\n.align 2\n\n_start:\n"
+	result := ".global _main\n.align 2\n\n_main:\n"
 	for _, instr := range ir.instructions {
 		switch instr.op {
 		case add:
