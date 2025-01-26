@@ -50,6 +50,7 @@ func placeConstantsInRegisters(ir *IR) {
 
 func Compile(ir *IR, architecture string) string {
 	a := Architectures[architecture]
+	g := a.GetGenerator(ir)
 	if a == nil {
 		panic("Unknown or unsupported architecture: " + architecture)
 	}
@@ -70,21 +71,21 @@ func Compile(ir *IR, architecture string) string {
 	for _, instr := range ir.instructions {
 		switch instr.op {
 		case add:
-			result += getInstruction(a, "add", instr, ir)
+			result += g.GetInstruction("add", instr)
 		case sub:
-			result += getInstruction(a, "sub", instr, ir)
+			result += g.GetInstruction("sub", instr)
 		case mult:
-			result += getInstruction(a, "mul", instr, ir)
+			result += g.GetInstruction("mul", instr)
 		case div:
-			result += getInstruction(a, "sdiv", instr, ir)
+			result += g.GetInstruction("sdiv", instr)
 		case mov:
-			result += getTwoArgInstruction(a, "mov", instr, ir)
+			result += g.GetTwoArgInstruction("mov", instr)
 		case load:
-			result += getTwoArgInstruction(a, "ldr", instr, ir)
+			result += g.GetTwoArgInstruction("ldr", instr)
 		case store:
-			result += getTwoArgNoRetInstruction(a, "str", instr, ir)
+			result += g.GetTwoArgNoRetInstruction("str", instr)
 		case ret:
-			result += getReturn()
+			result += g.GetReturn()
 		default:
 			panic("Unknown operation: " + strconv.Itoa(int(instr.op)))
 		}
@@ -198,54 +199,6 @@ func addSpillInstructions(a *Architecture, ir *IR) {
 // Converts our virtual stack pointer into a real address
 func GetStackAddress(a *Architecture, ir *IR, stackPos int) Arg {
 	return GetStackPointer().ToAddress(ir.GetConstant((stackPos - 1) * a.IntSize))
-}
-
-// For now we just assume the last register assigned is the return register
-func getReturn() string {
-	return "  ret\n"
-}
-
-func getTwoArgInstruction(a *Architecture, name string, instr Instruction, ir *IR) string {
-	retRegister := a.GetPhysicalRegister(instr.ret.value)
-	arg2 := getArg(a, instr.arg2, ir)
-	return "  " + name + " " + retRegister + ", " + arg2 + "\n"
-}
-
-func getTwoArgNoRetInstruction(a *Architecture, name string, instr Instruction, ir *IR) string {
-	arg1Register := a.GetPhysicalRegister(instr.arg1.value)
-	arg2 := getArg(a, instr.arg2, ir)
-	return "  " + name + " " + arg1Register + ", " + arg2 + "\n"
-}
-
-func getInstruction(a *Architecture, name string, instr Instruction, ir *IR) string {
-	retRegister := a.GetPhysicalRegister(instr.ret.value)
-	arg1 := a.GetPhysicalRegister(instr.arg1.value)
-	arg2 := getArg(a, instr.arg2, ir)
-	return "  " + name + " " + retRegister + ", " + arg1 + ", " + arg2 + "\n"
-}
-
-func getArg(a *Architecture, arg Arg, ir *IR) string {
-	switch arg.argType {
-	case constant:
-		return getConstant(arg.value, ir)
-	case registerArg:
-		if arg.isVirtualRegister {
-			panic("Virtual register not allowed at code generation time")
-		}
-		return a.GetPhysicalRegister(arg.value)
-	case address:
-		return getAddress(a, arg, ir)
-	default:
-		panic("Unknown argument type")
-	}
-}
-
-func getAddress(a *Architecture, arg Arg, ir *IR) string {
-	return "[" + a.GetPhysicalRegister(arg.value) + ", #" + strconv.Itoa(ir.constants[arg.offsetConstant]) + "]"
-}
-
-func getConstant(i int, ir *IR) string {
-	return "#" + strconv.Itoa(ir.constants[i])
 }
 
 type allocType int
