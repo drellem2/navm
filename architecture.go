@@ -5,6 +5,7 @@ import (
 )
 
 const AARCH64_MACOS_NONE = "aarch64-macos-none"
+const X64_WIN_GNU = "x86_64-windows-gnu"
 
 type Architecture struct {
 	TargetTriple         string
@@ -17,12 +18,18 @@ type Architecture struct {
 
 var Architectures = map[string]*Architecture{
 	AARCH64_MACOS_NONE: MakeAarch64MacArchitecture(),
+	X64_WIN_GNU:        MakeX64WinGnuArchitecture(),
 }
 
 func (a *Architecture) GetGenerator(ir *IR) Generator {
 	switch a.TargetTriple {
 	case AARCH64_MACOS_NONE:
 		return &MacGenerator{
+			arch: a,
+			ir:   ir,
+		}
+	case X64_WIN_GNU:
+		return &WinGenerator{
 			arch: a,
 			ir:   ir,
 		}
@@ -33,13 +40,30 @@ func (a *Architecture) GetGenerator(ir *IR) Generator {
 
 var aarchMac64Registers = []string{"X9", "X10", "X11", "X12", "X13", "X14", "X15"}
 var aarchMacReturnRegister = "X0"
+var aarchMacStackPointerRegister = "SP"
+
+// use x86_64 registers, not arm
+var x64WinGnuRegisters = []string{"R10", "R11", "R12", "R13", "R14", "R15"}
+var x64WinGnuReturnRegister = "RAX"
+var x64WinGnuStackPointerRegister = "RSP"
 
 func MakeAarch64MacArchitecture() *Architecture {
 	return &Architecture{
 		TargetTriple:         AARCH64_MACOS_NONE,
 		Registers64:          aarchMac64Registers,
 		ReturnRegister:       aarchMacReturnRegister,
-		StackPointerRegister: "SP",
+		StackPointerRegister: aarchMacStackPointerRegister,
+		IntSize:              8,
+		StackAlignmentSize:   16,
+	}
+}
+
+func MakeX64WinGnuArchitecture() *Architecture {
+	return &Architecture{
+		TargetTriple:         X64_WIN_GNU,
+		Registers64:          x64WinGnuRegisters,
+		ReturnRegister:       x64WinGnuReturnRegister,
+		StackPointerRegister: x64WinGnuStackPointerRegister,
 		IntSize:              8,
 		StackAlignmentSize:   16,
 	}

@@ -7,9 +7,24 @@ package navm
 
 type Generator interface {
 	Init(a *Architecture, ir *IR)
+	GetHeader() string
 	GetReturn() string
-	GetTwoArgInstruction(name string, instr Instruction) string
-	GetTwoArgNoRetInstruction(name string, instr Instruction) string
-	GetInstruction(name string, instr Instruction) string
+	GetTwoArgInstruction(op GenOp, instr Instruction) string
+	GetTwoArgNoRetInstruction(op GenOp, instr Instruction) string
+	GetInstruction(op GenOp, instr Instruction) string
 	GetArg(arg Arg) string
+	GetTargetInstruction(op GenOp) string
 }
+
+type GenOp int
+
+const (
+	noGenOp    GenOp = iota
+	addGenOp   GenOp = iota
+	subGenOp   GenOp = iota
+	multGenOp  GenOp = iota
+	divGenOp   GenOp = iota
+	movGenOp   GenOp = iota
+	loadGenOp  GenOp = iota
+	storeGenOp GenOp = iota
+)

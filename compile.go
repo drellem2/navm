@@ -67,23 +67,23 @@ func Compile(ir *IR, architecture string) string {
 	addSpillInstructions(a, ir)
 	freeStackSpace(a, ir, stackMax)
 
-	result := ".global _main\n.align 2\n\n_main:\n"
+	result := g.GetHeader()
 	for _, instr := range ir.instructions {
 		switch instr.op {
 		case add:
-			result += g.GetInstruction("add", instr)
+			result += g.GetInstruction(addGenOp, instr)
 		case sub:
-			result += g.GetInstruction("sub", instr)
+			result += g.GetInstruction(subGenOp, instr)
 		case mult:
-			result += g.GetInstruction("mul", instr)
+			result += g.GetInstruction(multGenOp, instr)
 		case div:
-			result += g.GetInstruction("sdiv", instr)
+			result += g.GetInstruction(divGenOp, instr)
 		case mov:
-			result += g.GetTwoArgInstruction("mov", instr)
+			result += g.GetTwoArgInstruction(movGenOp, instr)
 		case load:
-			result += g.GetTwoArgInstruction("ldr", instr)
+			result += g.GetTwoArgInstruction(loadGenOp, instr)
 		case store:
-			result += g.GetTwoArgNoRetInstruction("str", instr)
+			result += g.GetTwoArgNoRetInstruction(storeGenOp, instr)
 		case ret:
 			result += g.GetReturn()
 		default:

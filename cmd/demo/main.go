@@ -170,7 +170,8 @@ func main() {
 	switch args[1] {
 	case "compile":
 		ir := toIR(args[2])
-		result := navm.Compile(ir, navm.AARCH64_MACOS_NONE)
+		// result := navm.Compile(ir, navm.AARCH64_MACOS_NONE)
+		result := navm.Compile(ir, navm.X64_WIN_GNU)
 		println(result)
 	case "interpret":
 		ir := toIR(args[2])
