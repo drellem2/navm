@@ -12,6 +12,10 @@ const scratch_register_count = 2
 
 // TODO: In priority order
 // 0. win x86_64 backend
+// 0.1 change tac to use 2-addresses only
+//      e.g. add r0, r1, r2 becomes
+//      - mov r0, r1
+//      - add r0, r0, r1
 // 1. check cross-compilation with zig cc
 
 // Add an initial pass that forces constants certain constants into registers
